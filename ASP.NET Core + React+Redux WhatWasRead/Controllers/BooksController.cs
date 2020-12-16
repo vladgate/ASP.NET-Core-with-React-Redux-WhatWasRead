@@ -1,0 +1,500 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+using ASP.NET_Core_React_Redux_WhatWasRead.Infrastructure;
+using ASP.NET_Core_React_Redux_WhatWasRead.Models;
+using ASP.NET_Core_React_Redux_WhatWasRead.App_Data.DBModels;
+using ASP.NET_Core_React_Redux_WhatWasRead.App_Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
+{
+   public interface IBooksRequestManager
+   {
+      NameValueCollection GetQueryString(ControllerBase controller);
+   }
+   internal sealed class BooksRequestManager : IBooksRequestManager
+   {
+      public NameValueCollection GetQueryString(ControllerBase controller)
+      {
+         var dict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(controller.Request.QueryString.Value);
+         if (dict.Count > 0)
+         {
+            NameValueCollection queryString = new NameValueCollection(dict.Count);
+            foreach (var item in dict)
+            {
+               queryString.Add(item.Key, item.Value);
+            }
+            return queryString;
+         }
+         else
+         {
+            return null;
+         }
+      }
+   }
+
+   [Route("api/[controller]")]
+   [ApiController]
+   public class BooksController : ControllerBase
+   {
+      private readonly IRepository _repository;
+      private IBooksRequestManager _booksRequestManager;
+      private string GetMimeType(string based64ImageSourceWithMime, out byte[] imageDataWithoutMime)
+      {
+         string withoutMime = based64ImageSourceWithMime.Substring(based64ImageSourceWithMime.IndexOf("base64,") + 7);
+         imageDataWithoutMime = Convert.FromBase64String(withoutMime);
+         string he = string.Empty;
+         for (int i = 0; i < 4; i++)
+         {
+            he += imageDataWithoutMime[i].ToString("x");
+         }
+         switch (he)
+         {
+            case "ffd8ffe0":
+            case "ffd8ffe1":
+            case "ffd8ffe2":
+            case "ffd8ffe3":
+            case "ffd8ffe8":
+               return "image/jpeg";
+            case "89504e47":
+               return "image/png";
+            default: return null;
+         }
+      }
+
+      public BooksController(IRepository repo)
+      {
+         _repository = repo;
+      }
+      public IBooksRequestManager BooksRequestManager
+      {
+         get
+         {
+            if (_booksRequestManager == null)
+            {
+               _booksRequestManager = new BooksRequestManager();
+            }
+            return _booksRequestManager;
+         }
+         set
+         {
+            _booksRequestManager = value;
+         }
+      }
+
+      [HttpGet("getImage/{id}")]
+      public FileContentResult GetImage(int id)
+      {
+         Book book = _repository.Books.FirstOrDefault(p => p.BookId == id);
+         if (book != null)
+         {
+            return File(book.ImageData, book.ImageMimeType);
+         }
+         else
+         {
+            return null;
+         }
+      }
+
+      [HttpGet("list")]
+      [HttpGet("list/{category}/page{page}")]
+      async public Task<BookListViewModel> List(int page = 1, string category = "all", string tag = null)
+      {
+         string defaultCategory = "all";
+         if (category == null)
+         {
+            category = defaultCategory;
+         }
+         Category currentCategory = null;
+         Tag currentTag = null;
+         if (category != defaultCategory)
+         {
+            currentCategory = _repository.Categories.Where(cat => cat.NameForLinks == category).FirstOrDefault();
+            if (currentCategory == null) //category does not exist
+            {
+               return null;
+            }
+         }
+         if (tag != null)
+         {
+            currentTag = _repository.Tags.Where(x => x.NameForLinks == tag).FirstOrDefault();
+            if (currentTag == null) //tag does not exist
+            {
+               return null;
+            }
+         }
+
+         IBooksRequestManager requestManager = this.BooksRequestManager;
+         NameValueCollection query = requestManager.GetQueryString(this);
+         if (query != null)
+         {
+            string[] queryKeys = query.AllKeys;
+            if (queryKeys.Length > 0 && !(queryKeys.Length == 1 && (queryKeys[0] == "tag" || queryKeys[0] == "page" || queryKeys[0] == "category")))
+            {
+               await _repository.UpdateBooksFromFilterUsingRawSql(query, "books", "list");
+            }
+         }
+
+         RightPanelViewModel rightPanelModel = new RightPanelViewModel();
+         LeftPanelViewModel leftPanelModel = new LeftPanelViewModel();
+         BookListViewModel model = new BookListViewModel { LeftPanelData = leftPanelModel, RightPanelData = rightPanelModel };
+         leftPanelModel.Categories = _repository.Categories.OrderBy(c => c.NameForLabels).ToList();
+         leftPanelModel.Tags = _repository.Tags.OrderBy(t => t.NameForLabels).ToList();
+         leftPanelModel.MinPagesExpected = _repository.Books.Count() > 0 ? _repository.Books.Select(b => b.Pages).Min() : 0;
+         leftPanelModel.MaxPagesExpected = _repository.Books.Count() > 0 ? _repository.Books.Select(b => b.Pages).Max() : 0;
+         leftPanelModel.MinPagesActual = leftPanelModel.MinPagesExpected;
+         leftPanelModel.MaxPagesActual = leftPanelModel.MaxPagesExpected;
+         if (query != null)
+         {
+            string pages = query["pages"];
+            if (pages != null)
+            {
+               string[] ar = pages.Split('-');
+               if (Int32.TryParse(ar[0], out int min))
+               {
+                  leftPanelModel.MinPagesActual = min;
+               }
+               if (Int32.TryParse(ar[1], out int max))
+               {
+                  leftPanelModel.MaxPagesActual = max;
+               }
+            }
+         }
+         leftPanelModel.Authors = _repository.Authors.Select(a => new AuthorViewModel
+         {
+            AuthorId = a.AuthorId,
+            DisplayText = a.DisplayText,
+            Link = Helper.CreateFilterPartOfLink(this.Request.Path, query, LeftPanelViewModel.AuthorQueryWord, a.AuthorId.ToString(), out bool check),
+            Checked = check
+         }).OrderBy(a => a.DisplayText).ToList();
+         leftPanelModel.Languages = _repository.Languages.Select(l => new LanguageViewModel
+         {
+            LanguageId = l.LanguageId,
+            NameForLabels = l.NameForLabels,
+            NameForLinks = l.NameForLinks,
+            Link = Helper.CreateFilterPartOfLink(this.Request.Path, query, LeftPanelViewModel.LanguageQueryWord, l.NameForLinks, out bool check),
+            Checked = check
+         }).OrderBy(l => l.NameForLabels).ToList();
+
+         IEnumerable<Book> books = null;
+         if (currentCategory == null) //all categories
+         {
+            if (currentTag == null) //all categories & all tags
+            {
+               books = _repository.Books
+                   .OrderByDescending(b => b.BookId);
+            }
+            else //all categories & specific tag
+            {
+               books = _repository.Books.Where(b => b.BookTags.Where(bt => bt.TagId == currentTag.TagId).Count() > 0)
+                   .OrderByDescending(b => b.BookId);
+            }
+         }
+         else //specific category
+         {
+            books = _repository.Books
+                .Where(b => b.CategoryId == currentCategory.CategoryId)
+                .OrderByDescending(b => b.BookId);
+         }
+
+         rightPanelModel.TotalPages = (int)Math.Ceiling((decimal)books.Count() / Globals.ITEMS_PER_PAGE);
+         books = books.Skip((page - 1) * Globals.ITEMS_PER_PAGE).Take(Globals.ITEMS_PER_PAGE);
+
+         if (books == null || books.Count() == 0)
+         {
+            return model;
+         }
+         rightPanelModel.BookInfo = books.Select(b => new BookShortInfo { BookId = b.BookId, Name = b.Name, Authors = b.DisplayAuthors() }).ToList();
+
+         return model;
+      }
+
+      [HttpGet("listAppend")]
+      async public Task<IEnumerable<BookShortInfo>> ListAppend(int page = 1, string category = "all", string tag = null)
+      {
+         string defaultCategory = "all";
+         if (category == null)
+         {
+            category = defaultCategory;
+         }
+         Category currentCategory = null;
+         Tag currentTag = null;
+         if (category != defaultCategory)
+         {
+            currentCategory = _repository.Categories.Where(cat => cat.NameForLinks == category).FirstOrDefault();
+            if (currentCategory == null) //category does not exist
+            {
+               return null;
+            }
+         }
+         if (tag != null)
+         {
+            currentTag = _repository.Tags.Where(x => x.NameForLinks == tag).FirstOrDefault();
+            if (currentTag == null) //tag does not exist
+            {
+               return null;
+            }
+         }
+
+         IBooksRequestManager requestManager = this.BooksRequestManager;
+         NameValueCollection query = requestManager.GetQueryString(this);
+         if (query != null)
+         {
+            string[] queryKeys = query.AllKeys;
+            if (queryKeys.Length > 0 && !(queryKeys.Length == 1 && (queryKeys[0] == "tag" || queryKeys[0] == "page" || queryKeys[0] == "category")))
+            {
+               await _repository.UpdateBooksFromFilterUsingRawSql(query, "books", "list");
+            }
+         }
+         IEnumerable<Book> books = null;
+         if (currentCategory == null) //all categories
+         {
+            if (currentTag == null) //all categories & all tags
+            {
+               books = _repository.Books
+                   .OrderByDescending(b => b.BookId);
+            }
+            else //all categories & specific tag
+            {
+               books = _repository.Books.Where(b => b.BookTags.Select(x => x.TagId).Contains(currentTag.TagId))
+                   .OrderByDescending(b => b.BookId);
+            }
+         }
+         else //specific category
+         {
+            books = _repository.Books
+                .Where(b => b.CategoryId == currentCategory.CategoryId)
+                .OrderByDescending(b => b.BookId);
+         }
+         books = books.Skip((page - 1) * Globals.ITEMS_PER_PAGE).Take(Globals.ITEMS_PER_PAGE);
+
+         if (books == null || books.Count() == 0)
+         {
+            return null;
+         }
+         IEnumerable<BookShortInfo> rightPanelModel = books.Select(b => new BookShortInfo { BookId = b.BookId, Name = b.Name, Authors = b.DisplayAuthors() }).ToList();
+         return rightPanelModel;
+      }
+
+      [HttpGet("details/{id}")]
+      public IActionResult Details(int id)
+      {
+         Book book = _repository.FindBook(id);
+         if (book == null)
+         {
+            return null;
+         }
+         var model = new
+         {
+            BookId = book.BookId,
+            AuthorsOfBooks = book.DisplayAuthors(),
+            BookTags = book.BookTags.Select(bt => new { NameForLabels = bt.Tag.NameForLabels, NameForLinks = bt.Tag.NameForLinks }),
+            Category = book.Category.NameForLabels,
+            Description = book.Description,
+            Language = book.Language.NameForLabels,
+            Name = book.Name,
+            Pages = book.Pages,
+            Year = book.Year
+         };
+         return new JsonResult(model);
+      }
+
+      [HttpGet("create")]
+      public IActionResult Create()
+      {
+         var model = new
+         {
+            Authors = _repository.Authors.OrderBy(a => a.DisplayText).ToList(),
+            Tags = _repository.Tags.OrderBy(t => t.NameForLabels).ToList(),
+            Categories = _repository.Categories.OrderBy(c => c.NameForLabels).ToList(),
+            Languages = _repository.Languages.OrderBy(l => l.NameForLabels).ToList()
+         };
+         return new JsonResult(model);
+      }
+
+      [HttpPost]
+      public async Task<IActionResult> Create(CreateEditBookViewModel model)
+      {
+         string errors = model.Validate(isCreate: true);
+         if (errors != "")
+         {
+            return new JsonResult(new { errors = errors });
+         }
+
+         Book book = new Book();
+         string mimeType = GetMimeType(model.Base64ImageSrc, out byte[] imageData);
+         if (mimeType != null)
+         {
+            book.ImageMimeType = mimeType;
+            book.ImageData = imageData;
+         }
+         else
+         {
+            return new JsonResult(new { errors = "Изображение имеет неверный формат." });
+         }
+
+         ICollection<Author> authors = _repository.Authors.Where(x => model.SelectedAuthorsId.Contains(x.AuthorId)).ToList();
+         if (authors.Count > 0)
+         {
+            foreach (Author author in authors)
+            {
+               book.AuthorsOfBooks.Add(new AuthorsOfBooks { Author = author, Book = book });
+            }
+         }
+         if (model.SelectedTagsId?.Count() > 0)
+         {
+            ICollection<Tag> tags = _repository.Tags.Where(x => model.SelectedTagsId.Contains(x.TagId)).ToList();
+            if (tags.Count > 0)
+            {
+               foreach (Tag tag in tags)
+               {
+                  book.BookTags.Add(new BookTags { Tag = tag, Book = book });
+               }
+            }
+         }
+
+         book.CategoryId = model.SelectedCategoryId;
+         book.Description = model.Description;
+         book.LanguageId = model.SelectedLanguageId;
+         book.Name = model.Name;
+         book.Pages = model.Pages;
+         book.Year = model.Year;
+         _repository.AddBook(book);
+         try
+         {
+            await _repository.SaveChangesAsync();
+         }
+         catch (Exception)
+         {
+            return new JsonResult(new { errors = "Возникла ошибка." });
+         }
+         return Ok(new { success = true, statuscode = "200", bookId = book.BookId });
+      }
+
+      [HttpGet("edit/{id}")]
+      public IActionResult Edit(int id)
+      {
+         Book book = _repository.FindBook(id);
+         if (book == null)
+         {
+            return null;
+         }
+         var model = new
+         {
+            BookId = book.BookId,
+            Name = book.Name,
+            Pages = book.Pages,
+            Description = book.Description,
+            Year = book.Year,
+            Base64ImageSrc = String.Format("data:{0};base64,{1}", book.ImageMimeType, Convert.ToBase64String(book.ImageData)),
+            SelectedLanguageId = book.LanguageId,
+            SelectedCategoryId = book.CategoryId,
+            SelectedAuthorsId = book.AuthorsOfBooks.Select(ab => ab.Author).Select(a => a.AuthorId).ToList(),
+            SelectedTagsId = book.BookTags.Select(a => a.TagId).ToList(),
+
+            Authors = _repository.Authors.Select(a =>new { AuthorId = a.AuthorId, DisplayText = a.DisplayText }).OrderBy(b => b.DisplayText).ToList(),
+            Tags = _repository.Tags.Select(t => new { TagId = t.TagId, NameForLabels = t.NameForLabels }).OrderBy(t => t.NameForLabels).ToList(),
+            Categories = _repository.Categories.Select(c => new { CategoryId = c.CategoryId, NameForLabels = c.NameForLabels }).OrderBy(c => c.NameForLabels).ToList(),
+            Languages = _repository.Languages.Select(l => new { LanguageId = l.LanguageId, NameForLabels = l.NameForLabels }).OrderBy(l => l.NameForLabels).ToList()
+         };
+         return new JsonResult(model);
+      }
+
+      [HttpPut]
+      public async Task<IActionResult> Edit(CreateEditBookViewModel model)
+      {
+         string errors = model.Validate(isCreate: false);
+         if (errors != "")
+         {
+            return new JsonResult(new { errors = errors });
+         }
+
+         Book book = _repository.Books.FirstOrDefault(x => x.BookId == model.BookId);
+         if (book == null)
+         {
+            return BadRequest();
+         }
+
+         string mimeType = GetMimeType(model.Base64ImageSrc, out byte[] imageData);
+         if (mimeType != null)
+         {
+            book.ImageMimeType = mimeType;
+            book.ImageData = imageData;
+         }
+         else
+         {
+            return new JsonResult(new { errors = "Изображение имеет неверный формат." });
+         }
+
+         ICollection<Author> authors = _repository.Authors.Where(x => model.SelectedAuthorsId.Contains(x.AuthorId)).ToList();
+         if (authors.Count > 0)
+         {
+            book.AuthorsOfBooks.Clear();
+            foreach (Author author in authors)
+            {
+               book.AuthorsOfBooks.Add(new AuthorsOfBooks { Author = author, Book = book });
+            }
+         }
+         book.BookTags.Clear();
+         if (model.SelectedTagsId?.Count() > 0)
+         {
+            ICollection<Tag> tags = _repository.Tags.Where(x => model.SelectedTagsId.Contains(x.TagId)).ToList();
+            if (tags.Count > 0)
+            {
+               foreach (Tag tag in tags)
+               {
+                  book.BookTags.Add(new BookTags { Tag = tag, Book = book });
+               }
+            }
+         }
+
+         book.CategoryId = model.SelectedCategoryId;
+         book.Description = model.Description;
+         book.LanguageId = model.SelectedLanguageId;
+         book.Name = model.Name;
+         book.Pages = model.Pages;
+         book.Year = model.Year;
+         try
+         {
+            await _repository.SaveChangesAsync();
+         }
+         catch (DbUpdateConcurrencyException)
+         {
+            if (!_repository.Books.Any(e => e.BookId == book.BookId))
+            {
+               return NotFound();
+            }
+            else
+            {
+               return new JsonResult(new { errors = "Возникла ошибка." });
+            }
+         }
+         return Ok(new { success = true, statuscode = "200" });
+      }
+
+      [HttpDelete("delete/{id}")]
+      public async Task<ActionResult> Delete(int id)
+      {
+         Book book = _repository.FindBook(id);
+         if (book == null)
+         {
+            return NotFound();
+         }
+         _repository.RemoveBook(book);
+         try
+         {
+            await _repository.SaveChangesAsync();
+         }
+         catch (Exception)
+         {
+            return new JsonResult(new { errors = "Возникла ошибка." });
+         }
+         return Ok(new { success = true, statuscode = "200" });
+      }
+   }
+}

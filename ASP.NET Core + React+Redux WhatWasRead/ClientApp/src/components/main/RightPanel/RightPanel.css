@@ -1,0 +1,8 @@
+﻿#right-panel {
+   min-width: 968px;
+   min-height: 350px;
+   background-color: linen;
+   float: left;
+   border-style: double;
+   border-color: darkgray;
+}

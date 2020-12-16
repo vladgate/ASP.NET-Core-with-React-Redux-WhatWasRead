@@ -1,0 +1,49 @@
+﻿.BookEdit .errors {
+   color: red;
+   font-weight: bolder;
+}
+
+.BookEdit label {
+   font-weight: 700;
+   text-align: left;
+   float: left;
+   margin-left: 7px;
+   min-width: 170px;
+}
+
+.BookEdit .container-horizontal {
+   margin-top: 0;
+   margin-bottom: 1rem;
+   width: 100%;
+   margin-left: 7px;
+   text-align: left;
+   float: left;
+}
+
+.BookEdit textarea {
+   width: 75%;
+   height: 250px;
+   min-height: 250px;
+}
+
+.BookEdit input[type=text] {
+   width: 75%;
+}
+
+input[type="file"] {
+   display: none;
+}
+
+a:not([href]) {
+   color: inherit;
+   border-style: outset;
+   background: ghostwhite;
+}
+
+.BookEdit select {
+   min-width: 200px;
+}
+
+.right-side-panel p {
+   margin-left: 0;
+}
