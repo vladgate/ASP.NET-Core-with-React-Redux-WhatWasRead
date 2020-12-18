@@ -101,7 +101,7 @@ export function changeAuthorChecked(authorId) {
 
 export function resetFilter() {
    return (dispatch, getState) => {
-      const state = getState();
+      const state = getState().main;
       const authors = state.leftPanelData.authors || [];
       for (let i = 0; i < authors.length; i++) {
          authors[i].checked = false;

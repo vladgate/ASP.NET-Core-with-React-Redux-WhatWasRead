@@ -26,7 +26,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead
       {
          services.AddControllersWithViews();
          services.AddDbContext<WhatWasReadContext>();
-         services.AddTransient<IRepository, EFRepository>();
+         services.AddScoped<IRepository, EFRepository>();
 
          // In production, the React files will be served from this directory
          services.AddSpaStaticFiles(configuration =>
@@ -58,25 +58,6 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead
          {
             endpoints.MapControllers();
          });
-         //app.UseEndpoints(endpoints =>
-         //{
-         //   endpoints.MapControllerRoute(
-         //          name: "Default",
-         //          pattern: "/",
-         //          defaults: new { controller = "Books", action = "List" }); //page = 1, category = "all", accepts filter via querystring
-         //   endpoints.MapControllerRoute(
-         //          name: "ControllerIdAction",
-         //          pattern: "{controller}/{action}/{id?}",
-         //          defaults: new { controller = "Books", action = "Index" }, //page = 1, category = "all", accepts filter via querystring
-         //          constraints: new { id = @"\d+" }
-         //          );
-         //   endpoints.MapControllerRoute(
-         //          name: "CategoryPageRoute",
-         //          pattern: "books/list/{category}/page{page}",
-         //          defaults: new { controller = "Books", action = "List", category = "all", page = 1 }, //page = 1, category = "all", accepts filter via querystring
-         //          constraints: new { page = @"\d+" }
-         //          );
-         //});
 
          app.UseSpa(spa =>
          {

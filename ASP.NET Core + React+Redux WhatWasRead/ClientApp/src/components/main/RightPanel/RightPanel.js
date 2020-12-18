@@ -15,6 +15,7 @@ class RightPanel extends React.Component {
 }
 
 function mapStateToProps(state) {
+   state = state.main;
    return {
       bookInfo: state.rightPanelData.bookInfo,
       currentPage: state.currentPage,
