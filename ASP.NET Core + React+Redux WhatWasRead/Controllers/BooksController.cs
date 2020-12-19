@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using ASP.NET_Core_React_Redux_WhatWasRead.Infrastructure;
 using ASP.NET_Core_React_Redux_WhatWasRead.Models;
@@ -44,28 +43,6 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
    {
       private readonly IRepository _repository;
       private IBooksRequestManager _booksRequestManager;
-      private string GetMimeType(string based64ImageSourceWithMime, out byte[] imageDataWithoutMime)
-      {
-         string withoutMime = based64ImageSourceWithMime.Substring(based64ImageSourceWithMime.IndexOf("base64,") + 7);
-         imageDataWithoutMime = Convert.FromBase64String(withoutMime);
-         string he = string.Empty;
-         for (int i = 0; i < 4; i++)
-         {
-            he += imageDataWithoutMime[i].ToString("x");
-         }
-         switch (he)
-         {
-            case "ffd8ffe0":
-            case "ffd8ffe1":
-            case "ffd8ffe2":
-            case "ffd8ffe3":
-            case "ffd8ffe8":
-               return "image/jpeg";
-            case "89504e47":
-               return "image/png";
-            default: return null;
-         }
-      }
 
       public BooksController(IRepository repo)
       {
@@ -328,7 +305,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
          }
 
          Book book = new Book();
-         string mimeType = GetMimeType(model.Base64ImageSrc, out byte[] imageData);
+         string mimeType = Helper.GetMimeType(model.Base64ImageSrc, out byte[] imageData);
          if (mimeType != null)
          {
             book.ImageMimeType = mimeType;
@@ -421,7 +398,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             return BadRequest();
          }
 
-         string mimeType = GetMimeType(model.Base64ImageSrc, out byte[] imageData);
+         string mimeType = Helper.GetMimeType(model.Base64ImageSrc, out byte[] imageData);
          if (mimeType != null)
          {
             book.ImageMimeType = mimeType;

@@ -16,7 +16,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.App_Data.EF
       public WhatWasReadContext(IConfiguration config) : base()
       {
          _config = config;
-         Database.Migrate();
+         //Database.Migrate();
       }
 
       public IConfiguration Config => _config;
@@ -38,7 +38,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.App_Data.EF
          {
             a.HasOne<Category>(b => b.Category)
                .WithMany(c => c.Books)
-               .HasForeignKey(b=>b.CategoryId)
+               .HasForeignKey(b => b.CategoryId)
                .OnDelete(DeleteBehavior.Restrict);
             a.HasOne<Language>(b => b.Language)
                .WithMany(l => l.Books)
@@ -48,18 +48,18 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.App_Data.EF
 
          modelBuilder.Entity<AuthorsOfBooks>(a =>
          {
-            a.HasKey(ab => new { ab.BookId, ab.AuthorId});
-            a.HasOne<Author>(ab=>ab.Author)
-               .WithMany(a=>a.AuthorsOfBooks)
+            a.HasKey(ab => new { ab.BookId, ab.AuthorId });
+            a.HasOne<Author>(ab => ab.Author)
+               .WithMany(a => a.AuthorsOfBooks)
                .OnDelete(DeleteBehavior.Restrict);
-            a.HasOne<Book>(ab=>ab.Book)
+            a.HasOne<Book>(ab => ab.Book)
                .WithMany(a => a.AuthorsOfBooks)
                .OnDelete(DeleteBehavior.Cascade);
          });
 
          modelBuilder.Entity<BookTags>(a =>
          {
-            a.HasKey(ab => new { ab.BookId , ab.TagId });
+            a.HasKey(ab => new { ab.BookId, ab.TagId });
             a.HasOne<Tag>(bt => bt.Tag)
                .WithMany(a => a.BookTags)
                .OnDelete(DeleteBehavior.Restrict);
@@ -68,6 +68,13 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.App_Data.EF
                .OnDelete(DeleteBehavior.Cascade);
          });
 
+         modelBuilder.Entity<Filter>(f =>
+         {
+            f.HasOne<FilterTarget>(f => f.FilterTarget)
+            .WithMany(f => f.Filters)
+            .HasForeignKey(f => f.FilterTargetId)
+            .OnDelete(DeleteBehavior.Restrict);
+         });
          //init data
          modelBuilder.Entity<DBModels.Category>().HasData(new Category[]
          {
@@ -96,7 +103,6 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.App_Data.EF
             entity.HasNoKey();
             entity.ToView<BooksWithAuthor>("BooksWithAuthors");
          });
-
       }
 
       protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

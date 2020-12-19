@@ -443,7 +443,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Migrations
                     b.HasOne("ASP.NET_Core_React_Redux_WhatWasRead.App_Data.DBModels.FilterTarget", "FilterTarget")
                         .WithMany("Filters")
                         .HasForeignKey("FilterTargetId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("FilterTarget");
