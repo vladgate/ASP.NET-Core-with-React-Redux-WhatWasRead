@@ -3,7 +3,6 @@ import './BookRow.css';
 import BookInfo from '../BookInfo/BookInfo';
 
 class BookRow extends React.Component {
-   
    render() {
       const items = [];
       items.push(this.createBookInfo(this.props.book1));

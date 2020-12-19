@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import './TagList.css';
 import { connect } from 'react-redux';
-import { tagInputChanged, fetchTags, editTag, deleteTag, saveNewTag, saveEditedTag, cancelEdit } from '../../../store/actions/tag';
+import { tagInputChanged, fetchTags, editTag, deleteTag, saveNewTag, saveEditedTag, cancelEditTag } from '../../../store/actions/tag';
 
 class TagList extends React.Component {
 
@@ -31,7 +31,7 @@ class TagList extends React.Component {
       this.props.saveEditedTag(tagId, nameForLabels, nameForLinks);
    }
 
-   onCancelEditBtnClick(tagId) {
+   onCancelEditBtnClick(event) {
       this.props.cancelEdit();
    }
 
@@ -60,7 +60,7 @@ class TagList extends React.Component {
             <td>
                <button className="btn-edit" onClick={(event) => this.onSaveEditedBtnClick(event, tag.tagId)}>Сохранить</button>
                <span> | </span>
-               <button className="btn-cancel" onClick={(event) => this.onCancelEditBtnClick(event, tag.tagId)}>Отмена</button>
+               <button className="btn-cancel" onClick={(event) => this.onCancelEditBtnClick(event)}>Отмена</button>
                <span> | </span>
                <button className="btn-delete" onClick={(event) => this.onDeleteBtnClick(event, tag.tagId)}>Удалить</button>
             </td>
@@ -68,7 +68,6 @@ class TagList extends React.Component {
    }
 
    render() {
-      console.log("render", this.props);
       return (
          <div className="TagList">
             <h3>Добавить тег</h3>
@@ -120,9 +119,8 @@ function mapDispatchToProps(dispatch) {
       editTag: (tagId) => dispatch(editTag(tagId)),
       saveNewTag: () => dispatch(saveNewTag()),
       saveEditedTag: (tagId, nameForLabels, nameForLinks) => dispatch(saveEditedTag(tagId, nameForLabels, nameForLinks)),
-      cancelEdit: () => dispatch(cancelEdit()),
+      cancelEdit: () => dispatch(cancelEditTag()),
       deleteTag: (tagId) => dispatch(deleteTag(tagId)),
-      validateInput: () => dispatch(),
       inputChanged: (name, value) => dispatch(tagInputChanged(name, value)),
    };
 }

@@ -1,5 +1,7 @@
 ﻿import React from 'react';
 import './AuthorList.css';
+import { connect } from 'react-redux';
+import { fetchAuthors, editAuthor, saveNewAuthor, saveEditedAuthor, cancelEditAuthor, deleteAuthor, authorInputChanged } from '../../../store/actions/author';
 
 class AuthorList extends React.Component {
    constructor(props) {
@@ -15,138 +17,37 @@ class AuthorList extends React.Component {
    }
 
    componentDidMount() {
-      this.fetchData();
-   }
-
-   async fetchData() {
-      const url = `/api/authors`;
-      const response = await fetch(url);
-      const data = await response.json();
-      this.setState({
-         authors: data || []
-      });
+      this.props.fetchData();
    }
 
    onFirstNameChanged(event) {
-      this.setState({ addFirstName: event.target.value });
+      this.props.inputChanged("addFirstName", event.target.value || "");
    }
 
    onLastNameChanged(event) {
-      this.setState({ addLastName: event.target.value });
-   }
-   validateInput(lastName, firstName) {
-      let errors = "";
-      if (lastName.trim().length < 2 || lastName.trim().length > 30) {
-         errors += "Фамилия автора должна состоять от 2 до 30 символов. "
-      }
-      if (firstName.trim().length < 2 || firstName.trim().length > 30) {
-         errors += "Имя автора должно состоять от 2 до 30 символов. "
-      }
-      return errors;
+      this.props.inputChanged("addLastName", event.target.value || "");
    }
 
    onSaveNewAuthorClick(event) {
-      const errors = this.validateInput(this.state.addLastName, this.state.addFirstName);
-      if (errors) {
-         this.setState({ saveErrors: errors });
-         return;
-      }
-
-      const body = {
-         lastName: this.state.addLastName,
-         firstName: this.state.addFirstName
-      };
-      try {
-         const url = `/api/authors`;
-         fetch(url, {
-            method: 'POST',
-            headers: {
-               'Accept': 'application/json',
-               'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-         })
-            .then(async (data) => {
-               const response = await data.json();
-               if (response.success) {
-                  this.setState({
-                     addFirstName: "",
-                     addLastName: "",
-                     saveErrors: "",
-                     tableErrors: ""
-                  });
-                  this.fetchData();
-               }
-               else if (response.errors) {
-                  this.setState({ saveErrors: response.errors });
-               }
-            });
-      }
-      catch (e) {
-         console.log(e);
-      }
+      this.props.saveNewAuthor();
    }
 
-   async onEditBtnClick(event, authorId) {
-      this.setState({ editAuthorId: authorId });
+   onEditBtnClick(event, authorId) {
+      this.props.editAuthor(authorId);
    }
 
-   async onSaveEditedBtnClick(event, authorId) {
+   onSaveEditedBtnClick(event, authorId) {
       const lastName = document.getElementById("edit-lastName").value;
       const firstName = document.getElementById("edit-firstName").value;
-      const errors = this.validateInput(lastName, firstName);
-      if (errors) {
-         this.setState({ tableErrors: errors });
-         return;
-      }
-
-      const body = {
-         authorId: authorId,
-         lastName: lastName,
-         firstName: firstName
-      };
-      try {
-         const url = `/api/authors`;
-         fetch(url, {
-            method: 'PUT',
-            headers: {
-               'Accept': 'application/json',
-               'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-         })
-            .then(async (data) => {
-               const response = await data.json();
-               if (response.success) {
-                  this.setState({ editAuthorId: 0 });
-                  this.fetchData();
-               }
-               else if (response.errors) {
-                  this.setState({ tableErrors: response.errors });
-               }
-            });
-      }
-      catch (e) {
-         console.log(e);
-      }
+      this.props.saveEditedAuthor(authorId, lastName, firstName);
    }
 
-   async onDeleteBtnClick(event, authorId) {
-      const id = parseInt(authorId);
-      if (!id) {
-         return;
-      }
-      const response = await fetch(`/api/authors/${authorId}`, {
-         method: 'DELETE'
-      })
-      const data = await response.json();
-      if (data.success) {
-         this.setState({ tableErrors: "" });
-         this.fetchData();
-      }
-      else if (data.errors) {
-         this.setState({ tableErrors: data.errors });
-      }
+   onCancelEditBtnClick(event) {
+      this.props.cancelEdit();
+   }
+
+   onDeleteBtnClick(event, authorId) {
+      this.props.deleteAuthor(authorId);
    }
 
    renderUsual(author) {
@@ -170,6 +71,8 @@ class AuthorList extends React.Component {
             <td>
                <button className="btn-edit" onClick={(event) => this.onSaveEditedBtnClick(event, author.authorId)}>Сохранить</button>
                <span> | </span>
+               <button className="btn-cancel" onClick={(event) => this.onCancelEditBtnClick(event)}>Отмена</button>
+               <span> | </span>
                <button className="btn-delete" onClick={(event) => this.onDeleteBtnClick(event, author.authorId)}>Удалить</button>
             </td>
          </tr>);
@@ -183,17 +86,17 @@ class AuthorList extends React.Component {
             <div className="container-horizontal">
                <p>
                   <label>Фамилия:</label>
-                  <input type="text" value={this.state.addLastName} onChange={(event) => this.onLastNameChanged(event)} /></p>
+                  <input type="text" value={this.props.addLastName} onChange={(event) => this.onLastNameChanged(event)} /></p>
                <p>
                   <label>Имя:</label>
-                  <input type="text" value={this.state.addFirstName} onChange={(event) => this.onFirstNameChanged(event)} /></p>
-               <div className="errors">{this.state.saveErrors}</div>
+                  <input type="text" value={this.props.addFirstName} onChange={(event) => this.onFirstNameChanged(event)} /></p>
+               <div className="errors">{this.props.saveErrors}</div>
             </div>
             <button className="btn btn-primary" onClick={(event) => (this.onSaveNewAuthorClick(event))}>Сохранить</button>
 
             <hr />
             <h2>Авторы</h2>
-            <div className="errors">{this.state.tableErrors}</div>
+            <div className="errors">{this.props.tableErrors}</div>
             <table>
                <thead>
                   <tr>
@@ -203,11 +106,33 @@ class AuthorList extends React.Component {
                   </tr>
                </thead>
                <tbody>
-                  {this.state.authors.map((author) => this.state.editAuthorId === author.authorId ? this.renderForEdit(author) : this.renderUsual(author))}
+                  {this.props.authors.map((author) => this.props.editAuthorId === author.authorId ? this.renderForEdit(author) : this.renderUsual(author))}
                </tbody>
             </table>
          </div>);
    }
 }
+function mapStateToProps(state) {
+   return {
+      addLastName: state.author.addLastName,
+      addFirstName: state.author.addFirstName,
+      saveErrors: state.author.saveErrors,
+      tableErrors: state.author.tableErrors,
+      authors: state.author.authors,
+      editAuthorId: state.author.editAuthorId
+   };
+}
 
-export default AuthorList;
+function mapDispatchToProps(dispatch) {
+   return {
+      fetchData: () => dispatch(fetchAuthors()),
+      editAuthor: (authorId) => dispatch(editAuthor(authorId)),
+      saveNewAuthor: () => dispatch(saveNewAuthor()),
+      saveEditedAuthor: (authorId, lastName, firstName) => dispatch(saveEditedAuthor(authorId, lastName, firstName)),
+      cancelEdit: () => dispatch(cancelEditAuthor()),
+      deleteAuthor: (authorId) => dispatch(deleteAuthor(authorId)),
+      inputChanged: (name, value) => dispatch(authorInputChanged(name, value)),
+   };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(AuthorList);

@@ -4,23 +4,19 @@ import PagingWrapper from '../../main/PagingWrapper/PagingWrapper';
 import BookList from '../BookList/BookList';
 import { connect } from 'react-redux';
 
-class RightPanel extends React.Component {
-
-   render() {
-      return (<div id="right-panel">
-         <BookList books={this.props.bookInfo || []} isLoading={this.props.isLoading} />
-         <PagingWrapper search={this.props.search} />
-      </div>)
-   }
+const RightPanel = (props) => {
+   return (<div id="right-panel">
+      <BookList books={props.bookInfo || []} isLoading={props.isLoading} />
+      <PagingWrapper search={props.search} />
+   </div>);
 }
 
 function mapStateToProps(state) {
-   state = state.main;
    return {
-      bookInfo: state.rightPanelData.bookInfo,
-      currentPage: state.currentPage,
-      currentCategory: state.currentCategory,
-      isLoading: state.isLoading
+      bookInfo: state.main.rightPanelData.bookInfo,
+      currentPage: state.main.currentPage,
+      currentCategory: state.main.currentCategory,
+      isLoading: state.main.isLoading
    }
 }
 

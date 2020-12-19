@@ -33,12 +33,11 @@ class PagingWrapper extends React.Component {
 }
 
 function mapStateToProps(state) {
-   state = state.main;
    return {
-      activePages: state.activePages,
-      currentPage: state.currentPage,
-      currentCategory: state.currentCategory,
-      totalPages: state.rightPanelData.totalPages
+      activePages: state.main.activePages,
+      currentPage: state.main.currentPage,
+      currentCategory: state.main.currentCategory,
+      totalPages: state.main.rightPanelData.totalPages
    }
 }
 

@@ -1,5 +1,5 @@
 ﻿import {
-   INPUT_CHANGED, GET_TAGS_START, GET_TAGS_SUCCESS, GET_TAGS_ERROR, EDIT_TAG, DELETE_TAG_SUCCESS, DELETE_TAG_ERROR,
+   TAG_INPUT_CHANGED, GET_TAGS_START, GET_TAGS_SUCCESS, GET_TAGS_ERROR, EDIT_TAG, DELETE_TAG_ERROR,
    SAVE_NEW_TAG_ERROR, SAVE_NEW_TAG_START, SAVE_NEW_TAG_SUCCESS, SAVE_EDITED_TAG_START, SAVE_EDITED_TAG_ERROR, SAVE_EDITED_TAG_SUCCESS, CANCEL_EDIT_TAG
 } from "../actions/actionTypes";
 
@@ -36,11 +36,9 @@ export default function tagReducer(state = initialState, action) {
          return { ...state, editTagId: 0 };
       case SAVE_EDITED_TAG_ERROR:
          return { ...state, tableErrors: action.payload };
-      case DELETE_TAG_SUCCESS:
-         return { ...state };
       case DELETE_TAG_ERROR:
          return { ...state, tableErrors: action.payload };
-      case INPUT_CHANGED:
+      case TAG_INPUT_CHANGED:
          return { ...state, [action.payload.name]: action.payload.value };
       default: return state;
    }

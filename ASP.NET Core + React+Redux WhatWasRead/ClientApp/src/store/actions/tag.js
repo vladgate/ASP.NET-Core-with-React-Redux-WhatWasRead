@@ -1,13 +1,15 @@
 ﻿import {
-   INPUT_CHANGED, GET_TAGS_SUCCESS, GET_TAGS_ERROR, GET_TAGS_START, EDIT_TAG, CANCEL_EDIT_TAG, DELETE_TAG_SUCCESS, DELETE_TAG_ERROR,
+   TAG_INPUT_CHANGED, GET_TAGS_SUCCESS, GET_TAGS_ERROR, GET_TAGS_START, EDIT_TAG, CANCEL_EDIT_TAG, DELETE_TAG_ERROR,
    SAVE_NEW_TAG_SUCCESS, SAVE_NEW_TAG_ERROR, SAVE_NEW_TAG_START, SAVE_EDITED_TAG_ERROR, SAVE_EDITED_TAG_START, SAVE_EDITED_TAG_SUCCESS
 } from "./actionTypes";
+
+const apiUrl = '/api/tags';
 
 export function fetchTags() {
    return async (dispatch) => {
       dispatch({ type: GET_TAGS_START });
       try {
-         const response = await fetch('/api/tags');
+         const response = await fetch(apiUrl);
          const data = await response.json();
          dispatch({
             type: GET_TAGS_SUCCESS,
@@ -29,11 +31,10 @@ export function editTag(tagId) {
    };
 }
 
-export function cancelEdit() {
+export function cancelEditTag() {
    return {
       type: CANCEL_EDIT_TAG
    };
-
 }
 
 export function deleteTag(tagId) {
@@ -47,7 +48,6 @@ export function deleteTag(tagId) {
          });
          const data = await response.json();
          if (data.success) {
-            dispatch({ type: DELETE_TAG_SUCCESS });
             dispatch(fetchTags());
          }
          else if (data.errors) {
@@ -61,7 +61,7 @@ export function deleteTag(tagId) {
 
 export function tagInputChanged(name, value) {
    return {
-      type: INPUT_CHANGED,
+      type: TAG_INPUT_CHANGED,
       payload: { name: name, value: value }
    };
 }
@@ -80,8 +80,7 @@ export function saveNewTag() {
       };
       dispatch({ type: SAVE_NEW_TAG_START });
       try {
-         const url = '/api/tags';
-         fetch(url, {
+         fetch(apiUrl, {
             method: 'POST',
             headers: {
                'Accept': 'application/json',
@@ -120,8 +119,7 @@ export function saveEditedTag(tagId, nameForLabels, nameForLinks ) {
          nameForLinks: nameForLinks
       };
       try {
-         const url = '/api/tags';
-         fetch(url, {
+         fetch(apiUrl, {
             method: 'PUT',
             headers: {
                'Accept': 'application/json',
