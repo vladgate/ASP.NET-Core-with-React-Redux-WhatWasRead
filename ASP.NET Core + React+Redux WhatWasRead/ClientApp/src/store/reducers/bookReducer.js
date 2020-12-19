@@ -41,8 +41,6 @@ const initialState = {
 };
 
 export default function bookReducer(state = initialState, action) {
-   console.log("bookReducer action", action);
-   console.log("bookReducer state", state);
    switch (action.type) {
       case GET_BOOK_DETAILS_START:
          return {

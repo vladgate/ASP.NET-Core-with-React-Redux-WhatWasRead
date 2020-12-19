@@ -1,4 +1,4 @@
-﻿import { GET_DATA_START, GET_DATA_SUCCESS, GET_DATA_ERROR, GET_NEXT_BOOK_INFO_SUCCESS, MIN_PAGE_CHANGED, MAX_PAGE_CHANGED, LANGUAGE_CHECKED_CHANGE, AUTHOR_CHECKED_CHANGE, RESET_FILTER } from "./actionTypes";
+﻿import { GET_DATA_START, GET_DATA_SUCCESS, GET_DATA_ERROR, GET_NEXT_BOOK_INFO_SUCCESS, MIN_PAGE_CHANGED, MAX_PAGE_CHANGED, LANGUAGE_CHECKED_CHANGED, AUTHOR_CHECKED_CHANGED, RESET_FILTER } from "./actionTypes";
 
 export function getData(category, page, search = null) {
    return async (dispatch) => {
@@ -75,7 +75,7 @@ export function changeLanguageChecked(langId) {
          }
       }
       dispatch({
-         type: LANGUAGE_CHECKED_CHANGE,
+         type: LANGUAGE_CHECKED_CHANGED,
          payload: languages
       });
    }
@@ -92,7 +92,7 @@ export function changeAuthorChecked(authorId) {
          }
       }
       dispatch({
-         type: AUTHOR_CHECKED_CHANGE,
+         type: AUTHOR_CHECKED_CHANGED,
          payload: authors
       });
    }

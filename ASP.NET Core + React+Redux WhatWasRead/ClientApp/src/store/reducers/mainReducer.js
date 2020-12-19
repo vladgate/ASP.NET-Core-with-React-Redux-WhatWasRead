@@ -1,4 +1,4 @@
-﻿import { GET_DATA_START, GET_DATA_SUCCESS, GET_NEXT_BOOK_INFO_SUCCESS, GET_DATA_ERROR, MIN_PAGE_CHANGED, MAX_PAGE_CHANGED, LANGUAGE_CHECKED_CHANGE, AUTHOR_CHECKED_CHANGE, RESET_FILTER } from "../actions/actionTypes"
+﻿import { GET_DATA_START, GET_DATA_SUCCESS, GET_NEXT_BOOK_INFO_SUCCESS, GET_DATA_ERROR, MIN_PAGE_CHANGED, MAX_PAGE_CHANGED, LANGUAGE_CHECKED_CHANGED, AUTHOR_CHECKED_CHANGED, RESET_FILTER } from "../actions/actionTypes"
 
 const initialState = {
    leftPanelData: {
@@ -23,7 +23,6 @@ const initialState = {
 }
 
 export default function mainReducer(state = initialState, action) {
-   console.log("mainReducer action", action);
    switch (action.type) {
       case GET_DATA_START: {
          return { ...state, isLoading: true }
@@ -50,11 +49,11 @@ export default function mainReducer(state = initialState, action) {
             activePages: state.activePages.concat(action.payload.currentPage),
             isLoading: false
          };
-      case LANGUAGE_CHECKED_CHANGE:
+      case LANGUAGE_CHECKED_CHANGED:
          return {
             ...state, leftPanelData: { ...state.leftPanelData, languages: action.payload }
          };
-      case AUTHOR_CHECKED_CHANGE:
+      case AUTHOR_CHECKED_CHANGED:
          return {
             ...state, leftPanelData: { ...state.leftPanelData, authors: action.payload }
          };
