@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASP.NET_Core_React_Redux_WhatWasRead.Migrations
 {
     [DbContext(typeof(WhatWasReadContext))]
-    [Migration("20201213122354_Initial")]
+    [Migration("20201219160136_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -445,7 +445,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Migrations
                     b.HasOne("ASP.NET_Core_React_Redux_WhatWasRead.App_Data.DBModels.FilterTarget", "FilterTarget")
                         .WithMany("Filters")
                         .HasForeignKey("FilterTargetId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("FilterTarget");
