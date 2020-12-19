@@ -28,7 +28,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
       [HttpGet]
       public IActionResult GetAuthors()
       {
-         return new JsonResult(_repository.Authors.Select(a => new { AuthorId = a.AuthorId, FirstName = a.FirstName, LastName = a.LastName }).ToList());
+         return new JsonResult(_repository.Authors.Select(a => new { AuthorId = a.AuthorId, FirstName = a.FirstName, LastName = a.LastName }).OrderBy(a=>a.LastName).ToList());
       }
 
       // GET: api/Authors/5

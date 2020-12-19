@@ -10,7 +10,7 @@
          font-weight: bold;
       }
 
-.btn-edit {
+.btn-edit, .btn-cancel {
    background-color: darkgrey;
    font-weight: bolder;
    color: darkblue;

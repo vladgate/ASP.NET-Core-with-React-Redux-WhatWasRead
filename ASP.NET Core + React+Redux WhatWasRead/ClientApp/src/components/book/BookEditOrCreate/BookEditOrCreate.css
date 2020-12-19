@@ -1,9 +1,9 @@
-﻿.BookEdit .errors {
+﻿.BookEditOrCreate .errors {
    color: red;
    font-weight: bolder;
 }
 
-.BookEdit label {
+.BookEditOrCreate label {
    font-weight: 700;
    text-align: left;
    float: left;
@@ -11,7 +11,7 @@
    min-width: 170px;
 }
 
-.BookEdit .container-horizontal {
+.BookEditOrCreate .container-horizontal {
    margin-top: 0;
    margin-bottom: 1rem;
    width: 100%;
@@ -20,14 +20,18 @@
    float: left;
 }
 
-.BookEdit textarea {
+.BookEditOrCreate textarea {
    width: 75%;
    height: 250px;
    min-height: 250px;
 }
 
-.BookEdit input[type=text] {
+.BookEditOrCreate input[type=text] {
    width: 75%;
+}
+
+.BookEditOrCreate select {
+   min-width: 200px;
 }
 
 input[type="file"] {
@@ -40,9 +44,6 @@ a:not([href]) {
    background: ghostwhite;
 }
 
-.BookEdit select {
-   min-width: 200px;
-}
 
 .right-side-panel p {
    margin-left: 0;

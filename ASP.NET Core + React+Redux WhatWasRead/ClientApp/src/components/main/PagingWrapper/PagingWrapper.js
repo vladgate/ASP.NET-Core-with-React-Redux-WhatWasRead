@@ -2,7 +2,7 @@
 import './PagingWrapper.css';
 import { NavLink } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { getNextBookInfo } from '../../../store/actions/actions';
+import { getNextBookInfo } from '../../../store/actions/main';
 
 class PagingWrapper extends React.Component {
 
@@ -34,10 +34,10 @@ class PagingWrapper extends React.Component {
 
 function mapStateToProps(state) {
    return {
-      activePages: state.activePages,
-      currentPage: state.currentPage,
-      currentCategory: state.currentCategory,
-      totalPages: state.rightPanelData.totalPages
+      activePages: state.main.activePages,
+      currentPage: state.main.currentPage,
+      currentCategory: state.main.currentCategory,
+      totalPages: state.main.rightPanelData.totalPages
    }
 }
 

@@ -28,7 +28,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
       [HttpGet]
       public IActionResult GetTags()
       {
-         return new JsonResult(_repository.Tags.Select(t => new { TagId = t.TagId, NameForLabels = t.NameForLabels, NameForLinks = t.NameForLinks }).ToList());
+         return new JsonResult(_repository.Tags.Select(t => new { TagId = t.TagId, NameForLabels = t.NameForLabels, NameForLinks = t.NameForLinks }).OrderBy(t=>t.NameForLabels).ToList());
       }
 
       // GET: api/Tags/5

@@ -1,11 +1,8 @@
 ﻿import React from 'react';
 import './BookRow.css';
 import BookInfo from '../BookInfo/BookInfo';
-//import { connect } from 'react-redux';
-
 
 class BookRow extends React.Component {
-   
    render() {
       const items = [];
       items.push(this.createBookInfo(this.props.book1));

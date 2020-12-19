@@ -292,14 +292,15 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
          var model = new
          {
             BookId = book.BookId,
-            AuthorsOfBooks = book.DisplayAuthors(),
-            BookTags = book.BookTags.Select(bt => new { NameForLabels = bt.Tag.NameForLabels, NameForLinks = bt.Tag.NameForLinks }),
-            Category = book.Category.NameForLabels,
-            Description = book.Description,
-            Language = book.Language.NameForLabels,
             Name = book.Name,
             Pages = book.Pages,
-            Year = book.Year
+            Year = book.Year,
+            Description = book.Description,
+            Base64ImageSrc = String.Format("data:{0};base64,{1}", book.ImageMimeType, Convert.ToBase64String(book.ImageData)),
+            AuthorsOfBooks = book.DisplayAuthors(),
+            BookTags = book.BookTags.Select(bt => new { bt.Tag.NameForLabels, bt.Tag.NameForLinks }),
+            Category = book.Category.NameForLabels,
+            Language = book.Language.NameForLabels
          };
          return new JsonResult(model);
       }
@@ -310,9 +311,9 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
          var model = new
          {
             Authors = _repository.Authors.OrderBy(a => a.DisplayText).ToList(),
-            Tags = _repository.Tags.OrderBy(t => t.NameForLabels).ToList(),
-            Categories = _repository.Categories.OrderBy(c => c.NameForLabels).ToList(),
-            Languages = _repository.Languages.OrderBy(l => l.NameForLabels).ToList()
+            Tags = _repository.Tags.Select(t=>new {t.TagId,t.NameForLabels }).OrderBy(t => t.NameForLabels).ToList(),
+            Categories = _repository.Categories.Select(c=>new {c.CategoryId,c.NameForLabels }).OrderBy(c => c.NameForLabels).ToList(),
+            Languages = _repository.Languages.Select(l=>new {l.LanguageId, l.NameForLabels }).OrderBy(l => l.NameForLabels).ToList()
          };
          return new JsonResult(model);
       }
