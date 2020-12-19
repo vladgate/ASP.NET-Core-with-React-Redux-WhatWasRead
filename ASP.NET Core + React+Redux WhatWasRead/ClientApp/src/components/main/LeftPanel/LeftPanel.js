@@ -2,7 +2,7 @@
 import './LeftPanel.css';
 import { connect } from 'react-redux';
 import { NavLink, Link, withRouter } from 'react-router-dom';
-import { getData, maxPageChanged, minPageChanged, changeLanguageChecked, changeAuthorChecked, resetFilter } from '../../../store/actions/actions';
+import { getData, maxPageChanged, minPageChanged, changeLanguageChecked, changeAuthorChecked, resetFilter } from '../../../store/actions/main';
 import { AUTHOR_QUERY_WORD, LANGUAGE_QUERY_WORD, PAGES_QUERY_WORD } from '../../common';
 
 class LeftPanel extends React.Component {
@@ -163,6 +163,7 @@ class LeftPanel extends React.Component {
    }
 }
 function mapStateToProps(state) {
+   state = state.main;
    return {
       data: state.leftPanelData,
       category: state.currentCategory,

@@ -4,7 +4,7 @@ import LeftPanel from '../../main/LeftPanel/LeftPanel';
 import RightPanel from '../../main/RightPanel/RightPanel';
 import { withRouter } from 'react-router';
 import { connect } from 'react-redux';
-import { getData } from '../../../store/actions/actions';
+import { getData } from '../../../store/actions/main';
 import Loader from '../../common/Loader/Loader';
 
 class MainPage extends React.Component {
@@ -33,10 +33,7 @@ class MainPage extends React.Component {
 }
 function mapStateToProps(state) {
    return {
-      data: state.leftPanelData,
-      category: state.currentCategory,
-      page: state.currentPage,
-      isLoading: state.isLoading
+      isLoading: state.main.isLoading
    }
 }
 function mapDispatchToProps(dispatch) {

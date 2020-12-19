@@ -1,153 +1,42 @@
 ﻿import React from 'react';
 import './TagList.css';
+import { connect } from 'react-redux';
+import { tagInputChanged, fetchTags, editTag, deleteTag, saveNewTag, saveEditedTag, cancelEditTag } from '../../../store/actions/tag';
 
 class TagList extends React.Component {
-   constructor(props) {
-      super(props);
-      this.state = {
-         tags: [],
-         editTagId: 0,
-         addNameForLabels: "",
-         addNameForLinks: "",
-         saveErrors: "",
-         tableErrors: ""
-      };
-   }
 
    componentDidMount() {
-      this.fetchData();
-   }
-
-   async fetchData() {
-      const url = `/api/tags`;
-      const response = await fetch(url);
-      const data = await response.json();
-      this.setState({
-         tags: data || []
-      });
+      this.props.fetchData();
    }
 
    onNameForLabelsChanged(event) {
-      this.setState({ addNameForLabels: event.target.value });
+      this.props.inputChanged("addNameForLabels", event.target.value || "");
    }
 
    onNameForLinksChanged(event) {
-      this.setState({ addNameForLinks: event.target.value });
-   }
-
-   validateInput(nameForLabels, nameForLinks) {
-      let errors = "";
-      if (nameForLabels.trim().length < 1 || nameForLabels.trim().length > 50) {
-         errors +="Текст представления тега должно состоять от 1 до 50 символов. "
-      }
-      if (nameForLinks.trim().length < 1 || nameForLinks.trim().length > 50) {
-         errors += "Текст ссылки тега должен состоять от 1 до 50 символов. "
-      }
-      return errors;
+      this.props.inputChanged("addNameForLinks", event.target.value || "");
    }
 
    onSaveNewTagClick(event) {
-      const errors = this.validateInput(this.state.addNameForLabels, this.state.addNameForLinks);
-      if (errors) {
-         this.setState({ saveErrors: errors });
-         return;
-      }
-
-      const body = {
-         nameForLabels: this.state.addNameForLabels,
-         nameForLinks: this.state.addNameForLinks
-      };
-      try {
-         const url = `/api/tags`;
-         fetch(url, {
-            method: 'POST',
-            headers: {
-               'Accept': 'application/json',
-               'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-         })
-            .then(async (data) => {
-               const response = await data.json();
-               if (response.success) {
-                  this.setState({
-                     addNameForLabels: "",
-                     addNameForLinks: "",
-                     saveErrors: "",
-                     tableErrors: ""
-                  });
-                  this.fetchData();
-               }
-               else if (response.errors) {
-                  this.setState({ saveErrors: response.errors });
-               }
-            });
-      }
-      catch (e) {
-         console.log(e);
-      }
+      this.props.saveNewTag();
    }
 
-   async onEditBtnClick(event, tagId) {
-      this.setState({ editTagId: tagId });
+   onEditBtnClick(event, tagId) {
+      this.props.editTag(tagId);
    }
 
-   async onSaveEditedBtnClick(event, tagId) {
+   onSaveEditedBtnClick(event, tagId) {
       const nameForLabels = document.getElementById("edit-nameForLabels").value;
       const nameForLinks = document.getElementById("edit-nameForLinks").value;
-      const errors = this.validateInput(nameForLabels, nameForLinks);
-      if (errors) {
-         this.setState({ tableErrors: errors });
-         return;
-      }
-
-      const body = {
-         tagId: tagId,
-         nameForLabels: nameForLabels,
-         nameForLinks: nameForLinks
-      };
-      try {
-         const url = `/api/tags`;
-         fetch(url, {
-            method: 'PUT',
-            headers: {
-               'Accept': 'application/json',
-               'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-         })
-            .then(async (data) => {
-               const response = await data.json();
-               if (response.success) {
-                  this.setState({ editTagId: 0 });
-                  this.fetchData();
-               }
-               else if (response.errors) {
-                  this.setState({ tableErrors: response.errors });
-               }
-            });
-      }
-      catch (e) {
-         console.log(e);
-      }
+      this.props.saveEditedTag(tagId, nameForLabels, nameForLinks);
    }
 
-   async onDeleteBtnClick(event, tagId) {
-      const id = parseInt(tagId);
-      if (!id) {
-         return;
-      }
-      const response = await fetch(`/api/tags/${tagId}`, {
-         method: 'DELETE'
-      })
-      const data = await response.json();
-      if (data.success) {
-         this.setState({ tableErrors: "" });
-         this.fetchData();
-      }
-      else if (data.errors) {
-         this.setState({ tableErrors: data.errors });
-      }
+   onCancelEditBtnClick(event) {
+      this.props.cancelEdit();
+   }
+
+   onDeleteBtnClick(event, tagId) {
+      this.props.deleteTag(tagId);
    }
 
    renderUsual(tag) {
@@ -171,6 +60,8 @@ class TagList extends React.Component {
             <td>
                <button className="btn-edit" onClick={(event) => this.onSaveEditedBtnClick(event, tag.tagId)}>Сохранить</button>
                <span> | </span>
+               <button className="btn-cancel" onClick={(event) => this.onCancelEditBtnClick(event)}>Отмена</button>
+               <span> | </span>
                <button className="btn-delete" onClick={(event) => this.onDeleteBtnClick(event, tag.tagId)}>Удалить</button>
             </td>
          </tr>);
@@ -184,17 +75,17 @@ class TagList extends React.Component {
             <div className="container-horizontal">
                <p>
                   <label>Текст представления:</label>
-                  <input type="text" value={this.state.addNameForLabels} onChange={(event) => this.onNameForLabelsChanged(event)} /></p>
+                  <input type="text" value={this.props.addNameForLabels} onChange={(event) => this.onNameForLabelsChanged(event)} /></p>
                <p>
                   <label>Текст ссылки:</label>
-                  <input type="text" value={this.state.addNameForLinks} onChange={(event) => this.onNameForLinksChanged(event)} /></p>
-               <div className="errors">{this.state.saveErrors}</div>
+                  <input type="text" value={this.props.addNameForLinks} onChange={(event) => this.onNameForLinksChanged(event)} /></p>
+               <div className="errors">{this.props.saveErrors}</div>
             </div>
             <button className="btn btn-primary" onClick={(event) => (this.onSaveNewTagClick(event))}>Сохранить</button>
 
             <hr />
             <h2>Теги</h2>
-            <div className="errors">{this.state.tableErrors}</div>
+            <div className="errors">{this.props.tableErrors}</div>
             <table>
                <thead>
                   <tr>
@@ -204,11 +95,34 @@ class TagList extends React.Component {
                   </tr>
                </thead>
                <tbody>
-                  {this.state.tags.map((tag) => this.state.editTagId === tag.tagId ? this.renderForEdit(tag) : this.renderUsual(tag))}
+                  {this.props.tags.map((tag) => this.props.editTagId === tag.tagId ? this.renderForEdit(tag) : this.renderUsual(tag))}
                </tbody>
             </table>
          </div>);
    }
 }
 
-export default TagList;
+function mapStateToProps(state){
+   return {
+      addNameForLabels: state.tag.addNameForLabels,
+      addNameForLinks: state.tag.addNameForLinks,
+      saveErrors: state.tag.saveErrors,
+      tableErrors: state.tag.tableErrors,
+      tags: state.tag.tags,
+      editTagId: state.tag.editTagId
+   };
+}
+
+function mapDispatchToProps(dispatch) {
+   return {
+      fetchData: () => dispatch(fetchTags()),
+      editTag: (tagId) => dispatch(editTag(tagId)),
+      saveNewTag: () => dispatch(saveNewTag()),
+      saveEditedTag: (tagId, nameForLabels, nameForLinks) => dispatch(saveEditedTag(tagId, nameForLabels, nameForLinks)),
+      cancelEdit: () => dispatch(cancelEditTag()),
+      deleteTag: (tagId) => dispatch(deleteTag(tagId)),
+      inputChanged: (name, value) => dispatch(tagInputChanged(name, value)),
+   };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(TagList);

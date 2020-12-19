@@ -115,5 +115,27 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Infrastructure
          NameValueCollection collection = HttpUtility.ParseQueryString(currentQueryString.ToString());
          return BuildQueryString(collection);
       }
+      public static string GetMimeType(string based64ImageSourceWithMime, out byte[] imageDataWithoutMime)
+      {
+         string withoutMime = based64ImageSourceWithMime.Substring(based64ImageSourceWithMime.IndexOf("base64,") + 7);
+         imageDataWithoutMime = Convert.FromBase64String(withoutMime);
+         string he = string.Empty;
+         for (int i = 0; i < 4; i++)
+         {
+            he += imageDataWithoutMime[i].ToString("x");
+         }
+         switch (he)
+         {
+            case "ffd8ffe0":
+            case "ffd8ffe1":
+            case "ffd8ffe2":
+            case "ffd8ffe3":
+            case "ffd8ffe8":
+               return "image/jpeg";
+            case "89504e47":
+               return "image/png";
+            default: return null;
+         }
+      }
    }
 }
