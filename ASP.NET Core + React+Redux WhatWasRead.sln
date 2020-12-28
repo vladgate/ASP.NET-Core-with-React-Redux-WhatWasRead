@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASP.NET Core + React+Redux WhatWasRead", "ASP.NET Core + React+Redux WhatWasRead\ASP.NET Core + React+Redux WhatWasRead.csproj", "{8E88B3EE-809B-4FB1-B3B6-A6E96CDDFAF9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASP.NET Core + React+Redux WhatWasRead", "ASP.NET Core + React+Redux WhatWasRead\ASP.NET Core + React+Redux WhatWasRead.csproj", "{8E88B3EE-809B-4FB1-B3B6-A6E96CDDFAF9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatWasRead_Core_React_Redux.NUnitTest", "WhatWasRead_Core_React_Redux.NUnitTest\WhatWasRead_Core_React_Redux.NUnitTest.csproj", "{19BC04D3-C04D-4EE3-AD8A-66E006C26E7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{8E88B3EE-809B-4FB1-B3B6-A6E96CDDFAF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E88B3EE-809B-4FB1-B3B6-A6E96CDDFAF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E88B3EE-809B-4FB1-B3B6-A6E96CDDFAF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19BC04D3-C04D-4EE3-AD8A-66E006C26E7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19BC04D3-C04D-4EE3-AD8A-66E006C26E7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19BC04D3-C04D-4EE3-AD8A-66E006C26E7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19BC04D3-C04D-4EE3-AD8A-66E006C26E7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

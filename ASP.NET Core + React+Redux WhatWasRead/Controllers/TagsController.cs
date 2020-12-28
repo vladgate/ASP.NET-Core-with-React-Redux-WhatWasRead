@@ -72,14 +72,18 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             }
             else
             {
-               return new JsonResult(new { errors = "Возникла ошибка." });
+               return new JsonResult(new { errors = "Данные были оновлены." });
             }
+         }
+         catch (Exception)
+         {
+            return new JsonResult(new { errors = "Возникла ошибка." });
          }
          return Ok(new { success = true, statuscode = "200" });
       }
 
       [HttpPost]
-      public async Task<ActionResult> PostTag(CreateEditTagViewModel model)
+      public async Task<IActionResult> PostTag(CreateEditTagViewModel model)
       {
          string errors = model.Validate(isCreate: true);
          if (errors != "")
@@ -101,7 +105,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
 
       // DELETE: api/Tags/5
       [HttpDelete("{id}")]
-      public async Task<ActionResult> DeleteTag(int id)
+      public async Task<IActionResult> DeleteTag(int id)
       {
          Tag tag = _repository.Tags.Where(a => a.TagId == id).FirstOrDefault();
          if (tag == null)
