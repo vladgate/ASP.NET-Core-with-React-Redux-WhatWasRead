@@ -80,7 +80,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Models
             errors.AppendLine("Не указана категория.");
          }
 
-         if (SelectedAuthorsId.Count() < 1)
+         if (SelectedAuthorsId == null || SelectedAuthorsId.Count() < 1)
          {
             errors.AppendLine("Не указано авторство книги.");
          }

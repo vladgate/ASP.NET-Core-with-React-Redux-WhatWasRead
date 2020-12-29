@@ -11,6 +11,7 @@ using ASP.NET_Core_React_Redux_WhatWasRead.App_Data;
 using ASP.NET_Core_React_Redux_WhatWasRead.Controllers;
 using WhatWasRead_Core_React_Redux.NUnitTest.Helpers;
 using ASP.NET_Core_React_Redux_WhatWasRead.Models;
+using System.Threading.Tasks;
 
 namespace My_Progress_UnitTests
 {
@@ -44,9 +45,9 @@ namespace My_Progress_UnitTests
 
       private Category[] _categories = new Category[3]
       {
-        new Category() { CategoryId = 3, NameForLinks = "cat3", NameForLabels = "Category 3" },
         new Category() { CategoryId = 1, NameForLinks = "cat1", NameForLabels = "Category 1" },
         new Category() { CategoryId = 2, NameForLinks = "cat2", NameForLabels = "Category 2" },
+        new Category() { CategoryId = 3, NameForLinks = "cat3", NameForLabels = "Category 3" },
       };
 
       private string _imageMimeType = "image/jpeg";
@@ -59,7 +60,7 @@ namespace My_Progress_UnitTests
             Category = _categories[0],
             CategoryId = _categories[0].CategoryId,
             Pages = 10,
-            Description = "Desc1",
+            Description = "Desc1dsf sdfsdf sdf ds",
             Name = "Book1",
             Year = 2001,
             Language = _languages[0],
@@ -300,18 +301,18 @@ namespace My_Progress_UnitTests
          //act
          BooksController controller = new BooksController(mockRepo);
          IActionResult result = controller.Edit(validId);
-         dynamic model = new DynamicWrapper(result);
+         dynamic json = new DynamicWrapper(result);
 
          //assert
          Assert.IsInstanceOf<JsonResult>(result);
-         Assert.AreEqual(editedBook.LanguageId, model.SelectedLanguageId);
-         Assert.AreEqual(editedBook.CategoryId, model.SelectedCategoryId);
-         Assert.AreEqual(editedBook.AuthorsOfBooks.Select(a => a.AuthorId).AsEnumerable(), model.SelectedAuthorsId);
-         Assert.AreEqual(editedBook.BookTags.Select(a => a.TagId).AsEnumerable(), model.SelectedTagsId);
-         Assert.AreEqual(_authors.Count(), model.Authors.Count());
-         Assert.AreEqual(_tags.Count(), model.Tags.Count());
-         Assert.AreEqual(_categories.Count(), model.Categories.Count());
-         Assert.AreEqual(_languages.Count(), model.Languages.Count());
+         Assert.AreEqual(editedBook.LanguageId, json.SelectedLanguageId);
+         Assert.AreEqual(editedBook.CategoryId, json.SelectedCategoryId);
+         Assert.AreEqual(editedBook.AuthorsOfBooks.Select(a => a.AuthorId).AsEnumerable(), json.SelectedAuthorsId);
+         Assert.AreEqual(editedBook.BookTags.Select(a => a.TagId).AsEnumerable(), json.SelectedTagsId);
+         Assert.AreEqual(_authors.Count(), (new DynamicWrapper(json.Authors) as dynamic).Count);
+         Assert.AreEqual(_tags.Count(), (new DynamicWrapper(json.Tags) as dynamic).Count);
+         Assert.AreEqual(_categories.Count(), (new DynamicWrapper(json.Categories) as dynamic).Count);
+         Assert.AreEqual(_languages.Count(), (new DynamicWrapper(json.Languages) as dynamic).Count);
       }
 
       [Test]
@@ -350,11 +351,12 @@ namespace My_Progress_UnitTests
          Book[] books = CreateBooks();
          mockRepo.Books.Returns(books);
          int invalidId = 999;
-         Book editedBook = books.Where(b => b.BookId == invalidId).FirstOrDefault();
+         Book editedBook = books.Where(b => b.BookId == 1).FirstOrDefault();
 
          //act
          BooksController controller = new BooksController(mockRepo);
-         CreateEditBookViewModel model = new CreateEditBookViewModel { BookId = invalidId };
+         CreateEditBookViewModel model = CreateCreateEditBookViewModel(editedBook,mockRepo);
+         model.BookId = invalidId;
          IActionResult result = controller.Edit(model).Result;
 
          //assert
@@ -380,7 +382,6 @@ namespace My_Progress_UnitTests
          Assert.IsInstanceOf<OkObjectResult>(result);
          dynamic json = new DynamicWrapper(result);
          Assert.AreEqual(true, json.success);
-         Assert.AreEqual(1, json.BookId);
       }
 
       private CreateEditBookViewModel CreateCreateEditBookViewModel(Book book, IRepository repository)
@@ -399,7 +400,7 @@ namespace My_Progress_UnitTests
          model.Pages = book.Pages;
          model.Description = book.Description;
          model.Year = book.Year;
-         model.Base64ImageSrc = String.Format("data:{0};base64,{1}", book.ImageMimeType, Convert.ToBase64String(book.ImageData));
+         model.Base64ImageSrc = String.Format("data:{0};base64,{1}", book.ImageMimeType ?? "", "/9j/4A==");
          model.SelectedLanguageId = book.LanguageId;
          model.SelectedCategoryId = book.CategoryId;
          model.SelectedAuthorsId = book.AuthorsOfBooks.Select(a => a.AuthorId).ToList();
@@ -426,14 +427,14 @@ namespace My_Progress_UnitTests
          //assert
          Assert.IsInstanceOf<JsonResult>(result);
          dynamic json = new DynamicWrapper(result);
-         Assert.AreEqual(_authors.Count(), json.Authors.Count);
-         Assert.AreEqual(_tags.Count(), json.Tags.Count);
-         Assert.AreEqual(_categories.Count(), json.Categories.Count);
-         Assert.AreEqual(_languages.Count(), json.Languages.Count);
-         Assert.AreEqual(1, json.Languages[0].LanguageId);
-         Assert.AreEqual(1, json.Tags[0].TagId);
-         Assert.AreEqual(1, json.Categories[0].CategoryId);
-         Assert.AreEqual(1, json.Authors[0].AuthorId);
+         Assert.AreEqual(_authors.Count(), (new DynamicWrapper(json.Authors) as dynamic).Count);
+         Assert.AreEqual(_tags.Count(), (new DynamicWrapper(json.Tags) as dynamic).Count);
+         Assert.AreEqual(_categories.Count(), (new DynamicWrapper(json.Categories) as dynamic).Count);
+         Assert.AreEqual(_languages.Count(), (new DynamicWrapper(json.Languages) as dynamic).Count);
+         Assert.AreEqual(1, (new DynamicWrapper(json.Languages) as dynamic)[0].LanguageId);
+         Assert.AreEqual(1, (new DynamicWrapper(json.Tags) as dynamic)[0].TagId);
+         Assert.AreEqual(1, (new DynamicWrapper(json.Categories) as dynamic)[0].CategoryId);
+         Assert.AreEqual(1, (new DynamicWrapper(json.Authors) as dynamic)[0].AuthorId);
       }
 
       [Test]
@@ -442,12 +443,12 @@ namespace My_Progress_UnitTests
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
          List<Book> books = CreateBooks().ToList();
-         Book newBook = new Book { Name = "NewBook" };
+         Book newBook = new Book { Name = "NewBook", Pages = 100, Description = "Some coorect description of book", Year = 2000, LanguageId = 1, CategoryId = 1, AuthorsOfBooks = { new AuthorsOfBooks { AuthorId = 1} } };
          mockRepo.Books.Returns(books);
-         int counter = 0;
-         mockRepo.When(b => b.AddBook(Arg.Any<Book>())).Do(Callback.First(b => books.Add(newBook)).AndAlways(x => counter++));
          mockRepo.Authors.Returns(_authors);
          mockRepo.Tags.Returns(_tags);
+         int counter = 0;
+         mockRepo.When(b => b.AddBook(Arg.Any<Book>())).Do(Callback.First(b => books.Add(newBook)).AndAlways(x => counter++));
 
          //act
          BooksController controller = new BooksController(mockRepo);
@@ -466,7 +467,7 @@ namespace My_Progress_UnitTests
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
-         Book newBook = new Book { Name = "NewBook" };
+         Book newBook = new Book { Name = "NewBook", Pages = 100, Description = "Some coorect description of book", Year = 2000, LanguageId = 1, CategoryId = 1, AuthorsOfBooks = { new AuthorsOfBooks { AuthorId = 1 } } };
          mockRepo.Authors.Returns(_authors);
          mockRepo.Tags.Returns(_tags);
          mockRepo.Categories.Returns(_categories);
@@ -475,7 +476,7 @@ namespace My_Progress_UnitTests
          //act
          BooksController controller = new BooksController(mockRepo);
          CreateEditBookViewModel model = CreateCreateEditBookViewModel(newBook, mockRepo);
-         model.Base64ImageSrc = null;
+         model.Base64ImageSrc = "data:;base64,/00009j/4A=="; //weong mime
          IActionResult result = controller.Create(model).Result;
 
          //assert
@@ -493,14 +494,14 @@ namespace My_Progress_UnitTests
          Book newBook = new Book();
          //act
          BooksController controller = new BooksController(mockRepo);
-         CreateEditBookViewModel model = new CreateEditBookViewModel();
+         CreateEditBookViewModel model = CreateCreateEditBookViewModel(newBook, mockRepo);
+         model.Base64ImageSrc = "";
          IActionResult result = controller.Create(model).Result;
 
          //assert
          Assert.IsInstanceOf<JsonResult>(result);
          dynamic json = new DynamicWrapper(result);
          string errors = json.errors;
-         Assert.IsTrue(errors.Contains("Неверный идентификатор"));
          Assert.IsTrue(errors.Contains("Не указано название книги"));
          Assert.IsTrue(errors.Contains("Количество страниц должно быть в диапазоне от 1 до 5000"));
          Assert.IsTrue(errors.Contains("Не указано описание книги"));
@@ -514,12 +515,16 @@ namespace My_Progress_UnitTests
       #region List
 
       [Test]
-      public void List_DefaultParameters_ReturnsCorrectCountOfBooks()
+      public void List_DefaultParameters_ReturnsCorrectModel()
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
          Book[] books = CreateBooks();
          mockRepo.Books.Returns(books);
+         mockRepo.Authors.Returns(_authors);
+         mockRepo.Languages.Returns(_languages);
+         mockRepo.Categories.Returns(_categories);
+         mockRepo.Tags.Returns(_tags);
          BooksController target = new BooksController(mockRepo);
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
@@ -595,10 +600,12 @@ namespace My_Progress_UnitTests
          IRepository mockRepo = Substitute.For<IRepository>();
          Book[] books = CreateBooks();
          mockRepo.Categories.Returns(_categories);
-         mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue)); //apply filter
+         mockRepo.Languages.Returns(_languages);
+         mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue).ToArray()); //apply filter
          NameValueCollection queryCollection = new System.Collections.Specialized.NameValueCollection();
          queryCollection.Add(queryKey, queryValue);
-         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(mockRepo.Books);
+         var task = Task.FromResult(mockRepo.Books);
+         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(task);
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
@@ -639,18 +646,19 @@ namespace My_Progress_UnitTests
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
       }
 
-      [TestCase("cat1", "lang", "en", 1, 1, 1)]
-      [TestCase("cat1", "lang", "en", 1, 2, 0)]
+      [TestCase("cat1", "lang", "en", 1, 3, 1)]
+      [TestCase("cat1", "lang", "en", 1, 4, 0)]
       public void List_ValidCategoryWithFilter_ReturnsCorrectOrderOfBooks(string category, string queryKey, string queryValue, int page, int bookId, int bookIndex)
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
          Book[] books = CreateBooks();
          mockRepo.Categories.Returns(_categories);
-         mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue)); //apply filter
+         mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue).ToArray()); //apply filter
          NameValueCollection queryCollection = new System.Collections.Specialized.NameValueCollection();
          queryCollection.Add(queryKey, queryValue);
-         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(mockRepo.Books);
+         var task = Task.FromResult(mockRepo.Books);
+         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(task);
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
@@ -705,9 +713,9 @@ namespace My_Progress_UnitTests
          IActionResult result = target.List(page, null, tag).Result;
          BookListViewModel model = ((JsonResult)result).Value as BookListViewModel;
          BookShortInfo[] booksResult = model.RightPanelData.BookInfo.ToArray();
-         
+
          //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
       }
 
@@ -719,10 +727,11 @@ namespace My_Progress_UnitTests
          IRepository mockRepo = Substitute.For<IRepository>();
          Book[] books = CreateBooks();
          mockRepo.Tags.Returns(_tags);
-         mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue)); //apply filter
+         mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue).ToArray()); //apply filter
          NameValueCollection queryCollection = new System.Collections.Specialized.NameValueCollection();
          queryCollection.Add(queryKey, queryValue);
-         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(mockRepo.Books);
+         var task = Task.FromResult(mockRepo.Books);
+         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(task);
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
@@ -735,12 +744,12 @@ namespace My_Progress_UnitTests
          BookShortInfo[] booksResult = model.RightPanelData.BookInfo.ToArray();
 
          //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
       }
 
       [TestCase("tag1", 1, 4, 0)]
-      [TestCase("tag1", 1, 2, 1)]
+      [TestCase("tag1", 1, 3, 1)]
       public void List_ValidTagNoFilter_ReturnsCorrectOrderOfBooks(string tag, int page, int bookId, int bookIndex)
       {
          //Arrange
@@ -763,18 +772,19 @@ namespace My_Progress_UnitTests
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
       }
 
-      [TestCase("tag1", "lang", "en", 1, 1, 1)]
-      [TestCase("tag1", "lang", "en", 1, 2, 0)]
+      [TestCase("tag1", "lang", "en", 1, 3, 1)]
+      [TestCase("tag1", "lang", "en", 1, 4, 0)]
       public void List_ValidTagWithFilter_ReturnsCorrectOrderOfBooks(string tag, string queryKey, string queryValue, int page, int bookId, int bookIndex)
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
          Book[] books = CreateBooks();
          mockRepo.Tags.Returns(_tags);
-         mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue)); //apply filter
+         mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue).ToArray()); //apply filter
          NameValueCollection queryCollection = new System.Collections.Specialized.NameValueCollection();
          queryCollection.Add(queryKey, queryValue);
-         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(mockRepo.Books);
+         var task = Task.FromResult(mockRepo.Books);
+         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(task);
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
@@ -834,11 +844,11 @@ namespace My_Progress_UnitTests
          IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
          BookShortInfo[] booksResult = model.ToArray();
          //Assert
-         Assert.IsInstanceOf<ViewComponentResult>(result);
-         Assert.AreSame(books[4], booksResult[0]);
-         Assert.AreSame(books[3], booksResult[1]);
-         Assert.AreSame(books[2], booksResult[2]);
-         Assert.AreSame(books[1], booksResult[3]);
+         Assert.IsInstanceOf<JsonResult>(result);
+         Assert.AreEqual(books[4].BookId, booksResult[0].BookId);
+         Assert.AreEqual(books[3].BookId, booksResult[1].BookId);
+         Assert.AreEqual(books[2].BookId, booksResult[2].BookId);
+         Assert.AreEqual(books[1].BookId, booksResult[3].BookId);
       }
 
       [Test]
@@ -913,7 +923,8 @@ namespace My_Progress_UnitTests
          mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue)); //apply filter
          NameValueCollection queryCollection = new System.Collections.Specialized.NameValueCollection();
          queryCollection.Add(queryKey, queryValue);
-         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(mockRepo.Books);
+         var task = Task.FromResult(mockRepo.Books);
+         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(task);
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
@@ -926,7 +937,7 @@ namespace My_Progress_UnitTests
          BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
-         Assert.IsInstanceOf<ViewComponentResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
       }
 
@@ -955,8 +966,8 @@ namespace My_Progress_UnitTests
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
       }
 
-      [TestCase("cat1", "lang", "en", 1, 1, 1)]
-      [TestCase("cat1", "lang", "en", 1, 2, 0)]
+      [TestCase("cat1", "lang", "en", 1, 3, 1)]
+      [TestCase("cat1", "lang", "en", 1, 4, 0)]
       public void ListAppend_ValidCategoryWithFilter_ReturnsCorrectOrderOfBooks(string category, string queryKey, string queryValue, int page, int bookId, int bookIndex)
       {
          //Arrange
@@ -966,7 +977,8 @@ namespace My_Progress_UnitTests
          mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue)); //apply filter
          NameValueCollection queryCollection = new System.Collections.Specialized.NameValueCollection();
          queryCollection.Add(queryKey, queryValue);
-         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(mockRepo.Books);
+         var task = Task.FromResult(mockRepo.Books);
+         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(task);
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
@@ -1011,7 +1023,6 @@ namespace My_Progress_UnitTests
          mockRepo.Tags.Returns(_tags);
          mockRepo.Books.Returns(books);
          BooksController target = new BooksController(mockRepo);
-
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
          mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
@@ -1037,7 +1048,8 @@ namespace My_Progress_UnitTests
          mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue)); //apply filter
          NameValueCollection queryCollection = new System.Collections.Specialized.NameValueCollection();
          queryCollection.Add(queryKey, queryValue);
-         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(mockRepo.Books);
+         var task = Task.FromResult(mockRepo.Books);
+         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(task);
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
@@ -1050,12 +1062,12 @@ namespace My_Progress_UnitTests
          BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
-         Assert.IsInstanceOf<ViewComponentResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
       }
 
       [TestCase("tag1", 1, 4, 0)]
-      [TestCase("tag1", 1, 2, 1)]
+      [TestCase("tag1", 1, 3, 1)]
       public void ListToAppend_ValidTagNoFilter_ReturnsCorrectOrderOfBooks(string tag, int page, int bookId, int bookIndex)
       {
          //Arrange
@@ -1063,7 +1075,6 @@ namespace My_Progress_UnitTests
          Book[] books = CreateBooks();
          mockRepo.Tags.Returns(_tags);
          mockRepo.Books.Returns(books);
-
          BooksController target = new BooksController(mockRepo);
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
@@ -1079,8 +1090,8 @@ namespace My_Progress_UnitTests
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
       }
 
-      [TestCase("tag1", "lang", "en", 1, 1, 1)]
-      [TestCase("tag1", "lang", "en", 1, 2, 0)]
+      [TestCase("tag1", "lang", "en", 1, 3, 1)]
+      [TestCase("tag1", "lang", "en", 1, 4, 0)]
       public void ListToAppend_ValidTagWithFilter_ReturnsCorrectOrderOfBooks(string tag, string queryKey, string queryValue, int page, int bookId, int bookIndex)
       {
          //Arrange
@@ -1090,7 +1101,8 @@ namespace My_Progress_UnitTests
          mockRepo.Books.Returns(books.Where(b => b.Language.NameForLinks == queryValue)); //apply filter
          NameValueCollection queryCollection = new System.Collections.Specialized.NameValueCollection();
          queryCollection.Add(queryKey, queryValue);
-         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(mockRepo.Books);
+         var task = Task.FromResult(mockRepo.Books);
+         mockRepo.UpdateBooksFromFilterUsingRawSql(queryCollection, Arg.Any<string>(), Arg.Any<string>()).Returns(task);
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
@@ -1106,8 +1118,6 @@ namespace My_Progress_UnitTests
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
       }
-
-
       #endregion
    }
 }

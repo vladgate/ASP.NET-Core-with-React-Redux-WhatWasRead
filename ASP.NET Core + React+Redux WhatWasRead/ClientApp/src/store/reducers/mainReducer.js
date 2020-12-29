@@ -23,7 +23,6 @@ const initialState = {
 }
 
 export default function mainReducer(state = initialState, action) {
-   console.log("action", action);
    switch (action.type) {
       case GET_DATA_START: {
          return { ...state, isLoading: true }

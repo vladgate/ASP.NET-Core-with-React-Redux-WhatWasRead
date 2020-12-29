@@ -163,12 +163,11 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
          leftPanelModel.MaxPagesExpected = _repository.Books.Count() > 0 ? _repository.Books.Select(b => b.Pages).Max() : 0;
          leftPanelModel.MinPagesActual = leftPanelModel.MinPagesExpected;
          leftPanelModel.MaxPagesActual = leftPanelModel.MaxPagesExpected;
-
          leftPanelModel.Authors = _repository.Authors.Select(a => new AuthorViewModel
          {
             AuthorId = a.AuthorId,
             DisplayText = a.DisplayText,
-            Link = Helper.CreateFilterPartOfLink(this.Request.Path, query, LeftPanelViewModel.AuthorQueryWord, a.AuthorId.ToString(), out bool check),
+            Link = Helper.CreateFilterPartOfLink(this.Request?.Path ?? "", query, LeftPanelViewModel.AuthorQueryWord, a.AuthorId.ToString(), out bool check),
             Checked = check
          }).OrderBy(a => a.DisplayText).ToList();
          leftPanelModel.Languages = _repository.Languages.Select(l => new LanguageViewModel
@@ -176,14 +175,14 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             LanguageId = l.LanguageId,
             NameForLabels = l.NameForLabels,
             NameForLinks = l.NameForLinks,
-            Link = Helper.CreateFilterPartOfLink(this.Request.Path, query, LeftPanelViewModel.LanguageQueryWord, l.NameForLinks, out bool check),
+            Link = Helper.CreateFilterPartOfLink(this.Request?.Path ?? "", query, LeftPanelViewModel.LanguageQueryWord, l.NameForLinks, out bool check),
             Checked = check
          }).OrderBy(l => l.NameForLabels).ToList();
 
          rightPanelModel.TotalPages = (int)Math.Ceiling((decimal)books.Count() / Globals.ITEMS_PER_PAGE);
          books = books.Skip((page - 1) * Globals.ITEMS_PER_PAGE).Take(Globals.ITEMS_PER_PAGE);
 
-         if (books != null && books.Count() != 0)
+         if (books != null )
          {
             rightPanelModel.BookInfo = books.Select(b => new BookShortInfo { BookId = b.BookId, Name = b.Name, Authors = b.DisplayAuthors() }).ToList();
          }
