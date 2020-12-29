@@ -3,13 +3,14 @@ using System.Linq;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using ASP.NET_Core_WhatWasRead.App_Data.DBModels;
 using NSubstitute;
-using ASP.NET_Core_WhatWasRead.App_Data;
-using ASP.NET_Core_WhatWasRead.Controllers;
 using Microsoft.AspNetCore.Mvc;
-using ASP.NET_Core_WhatWasRead.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using ASP.NET_Core_React_Redux_WhatWasRead.App_Data.DBModels;
+using ASP.NET_Core_React_Redux_WhatWasRead.App_Data;
+using ASP.NET_Core_React_Redux_WhatWasRead.Controllers;
+using WhatWasRead_Core_React_Redux.NUnitTest.Helpers;
+using ASP.NET_Core_React_Redux_WhatWasRead.Models;
 
 namespace My_Progress_UnitTests
 {
@@ -20,32 +21,32 @@ namespace My_Progress_UnitTests
       #region InitVariables
       private Language[] _languages = new Language[3]
       {
+         new Language {LanguageId = 3, NameForLabels="Ukrainian", NameForLinks = "ua"},
          new Language {LanguageId = 1, NameForLabels="English", NameForLinks = "en"},
          new Language {LanguageId = 2, NameForLabels="Russian", NameForLinks = "ru"},
-         new Language {LanguageId = 3, NameForLabels="Ukrainian", NameForLinks = "ua"},
       };
 
       private Author[] _authors = new Author[5]
 {
-         new Author {AuthorId = 1, FirstName = "F1", LastName="L1"},
-         new Author {AuthorId = 2, FirstName = "F2", LastName="L2"},
          new Author {AuthorId = 3, FirstName = "F3", LastName="L3"},
-         new Author {AuthorId = 4, FirstName = "F4", LastName="L4"},
+         new Author {AuthorId = 1, FirstName = "F1", LastName="L1"},
          new Author {AuthorId = 5, FirstName = "F5", LastName="L5"},
+         new Author {AuthorId = 2, FirstName = "F2", LastName="L2"},
+         new Author {AuthorId = 4, FirstName = "F4", LastName="L4"},
 };
 
       private Tag[] _tags = new Tag[3]
       {
+         new Tag {TagId = 3, NameForLabels="Tag3", NameForLinks = "tag3"},
          new Tag {TagId = 1, NameForLabels="Tag1", NameForLinks = "tag1"},
          new Tag {TagId = 2, NameForLabels="Tag2", NameForLinks = "tag2"},
-         new Tag {TagId = 3, NameForLabels="Tag3", NameForLinks = "tag3"},
       };
 
       private Category[] _categories = new Category[3]
       {
+        new Category() { CategoryId = 3, NameForLinks = "cat3", NameForLabels = "Category 3" },
         new Category() { CategoryId = 1, NameForLinks = "cat1", NameForLabels = "Category 1" },
         new Category() { CategoryId = 2, NameForLinks = "cat2", NameForLabels = "Category 2" },
-        new Category() { CategoryId = 3, NameForLinks = "cat3", NameForLabels = "Category 3" }
       };
 
       private string _imageMimeType = "image/jpeg";
@@ -83,7 +84,7 @@ namespace My_Progress_UnitTests
             ImageMimeType = _imageMimeType,
             ImageData = new byte[] { 2 },
          };
-         book2.AuthorsOfBooks = new List<AuthorsOfBooks>() { new AuthorsOfBooks {AuthorId = _authors[0].AuthorId, Author = _authors[0], Book = book2, BookId = book2.BookId }, new AuthorsOfBooks { AuthorId = _authors[1].AuthorId,  Author = _authors[1], Book = book2, BookId = book2.BookId } };
+         book2.AuthorsOfBooks = new List<AuthorsOfBooks>() { new AuthorsOfBooks { AuthorId = _authors[0].AuthorId, Author = _authors[0], Book = book2, BookId = book2.BookId }, new AuthorsOfBooks { AuthorId = _authors[1].AuthorId, Author = _authors[1], Book = book2, BookId = book2.BookId } };
          book2.BookTags = new List<BookTags>() { new BookTags { TagId = _tags[0].TagId, Tag = _tags[0], BookId = book2.BookId, Book = book2 }, new BookTags { TagId = _tags[1].TagId, Tag = _tags[1], BookId = book2.BookId, Book = book2 } };
 
 
@@ -101,8 +102,8 @@ namespace My_Progress_UnitTests
             ImageMimeType = _imageMimeType,
             ImageData = new byte[] { 3 },
          };
-         book3.AuthorsOfBooks = new List<AuthorsOfBooks>() { new AuthorsOfBooks {AuthorId = _authors[1].AuthorId, Author = _authors[1], BookId = book3.BookId, Book = book3 }, new AuthorsOfBooks { AuthorId = _authors[2].AuthorId, Author = _authors[2], Book = book3, BookId = book3.BookId }, new AuthorsOfBooks { AuthorId = _authors[3].AuthorId, Author = _authors[3], Book = book3, BookId = book3.BookId } };
-         book3.BookTags = new List<BookTags>() { new BookTags { TagId = _tags[1].TagId, Tag = _tags[1], BookId = book3.BookId, Book = book3 }, new BookTags { TagId = _tags[2].TagId, Tag = _tags[2], Book = book3,  BookId = book3.BookId, } };
+         book3.AuthorsOfBooks = new List<AuthorsOfBooks>() { new AuthorsOfBooks { AuthorId = _authors[1].AuthorId, Author = _authors[1], BookId = book3.BookId, Book = book3 }, new AuthorsOfBooks { AuthorId = _authors[2].AuthorId, Author = _authors[2], Book = book3, BookId = book3.BookId }, new AuthorsOfBooks { AuthorId = _authors[3].AuthorId, Author = _authors[3], Book = book3, BookId = book3.BookId } };
+         book3.BookTags = new List<BookTags>() { new BookTags { TagId = _tags[1].TagId, Tag = _tags[1], BookId = book3.BookId, Book = book3 }, new BookTags { TagId = _tags[2].TagId, Tag = _tags[2], Book = book3, BookId = book3.BookId, } };
 
          Book book4 = new Book
          {
@@ -191,14 +192,14 @@ namespace My_Progress_UnitTests
 
          //Act
          BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.Details(invalidId);
+         IActionResult result = controller.Details(invalidId);
 
          //Assert
          Assert.IsInstanceOf<NotFoundResult>(result);
       }
 
       [Test]
-      public void Details_ValidId_ReturnsCorrectView()
+      public void Details_ValidId_ReturnsCorrectJsonResult()
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -210,35 +211,18 @@ namespace My_Progress_UnitTests
 
          //Act
          BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.Details(validId);
+         IActionResult result = controller.Details(validId);
 
          //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.IsTrue((result as ViewResult).Model == expected);
+         Assert.IsInstanceOf<JsonResult>(result);
+         dynamic json = new DynamicWrapper(result);
+         Assert.AreEqual(validId, json.BookId);
 
       }
       #endregion
       #region Delete
       [Test]
-      public void Delete_NullId_ReturnsBadRequestStatusCode()
-      {
-         //arrange
-         IRepository mockRepo = Substitute.For<IRepository>();
-         Book[] books = CreateBooks();
-         mockRepo.Books.Returns(books);
-         int? nullId = null;
-
-         //act
-         BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.Delete(nullId);
-
-         //assert
-         Assert.IsInstanceOf<StatusCodeResult>(result);
-         Assert.IsTrue((result as StatusCodeResult).StatusCode == 400);
-      }
-
-      [Test]
-      public void Delete_InvalidId_ReturnsHttpNotFound()
+      public void Delete_InvalidId_ReturnsNotFoundResult()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -248,51 +232,14 @@ namespace My_Progress_UnitTests
 
          //act
          BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.Delete(invalidId);
+         IActionResult result = controller.Delete(invalidId).Result;
 
          //assert
          Assert.IsInstanceOf<NotFoundResult>(result);
       }
 
       [Test]
-      public void Delete_ValidId_ReturnsCorrectView()
-      {
-         //arrange
-         IRepository mockRepo = Substitute.For<IRepository>();
-         Book[] books = CreateBooks();
-         mockRepo.Books.Returns(books);
-         int validId = 1;
-         Book expectedBook = books.Where(b => b.BookId == validId).FirstOrDefault();
-         mockRepo.FindBook(validId).Returns(expectedBook);
-
-         //act
-         BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.Delete(validId);
-
-         //assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.AreSame(expectedBook, (result as ViewResult).Model);
-      }
-
-      [Test]
-      public void DeleteConfirmed_InvalidId_ReturnsHttpNotFound()
-      {
-         //arrange
-         IRepository mockRepo = Substitute.For<IRepository>();
-         Book[] books = CreateBooks();
-         mockRepo.Books.Returns(books);
-         int invalidId = 999;
-
-         //act
-         BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.DeleteConfirmed(invalidId);
-
-         //assert
-         Assert.IsInstanceOf<NotFoundResult>(result);
-      }
-
-      [Test]
-      public void DeleteConfirmed_ValidId_DeletedCorrectly()
+      public void Delete_ValidId_ReturnsOkObjectResult()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -305,19 +252,21 @@ namespace My_Progress_UnitTests
 
          //act
          BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.DeleteConfirmed(validId);
+         IActionResult result = controller.Delete(validId).Result;
          RedirectToActionResult result2 = result as RedirectToActionResult;
 
          //assert
          mockRepo.Received(1).RemoveBook(expectedBook);
-         Assert.IsInstanceOf<RedirectToActionResult>(result);
-         Assert.IsTrue(result2.ActionName == "List");
+         mockRepo.Received(1).SaveChangesAsync();
+         Assert.IsInstanceOf<OkObjectResult>(result);
+         dynamic json = new DynamicWrapper(result);
+         Assert.AreEqual(true, json.success);
       }
 
       #endregion
       #region Edit
       [Test]
-      public void Edit_InvalidId_ReturnsHttpNotFound()
+      public void EditGET_InvalidId_ReturnsHttpNotFound()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -327,14 +276,14 @@ namespace My_Progress_UnitTests
 
          //act
          BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.Edit(invalidId);
+         IActionResult result = controller.Edit(invalidId);
 
          //assert
          Assert.IsInstanceOf<NotFoundResult>(result);
       }
 
       [Test]
-      public void Edit_GET_ValidId_ReturnsCorrectModel()
+      public void Edit_GET_ValidId_ReturnsCorrectModelInJsonResult()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -350,26 +299,51 @@ namespace My_Progress_UnitTests
 
          //act
          BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.Edit(validId);
-         ViewResult viewResult = result as ViewResult;
-         SelectList categories = viewResult.ViewData["Categories"] as SelectList;
-         SelectList languages = viewResult.ViewData["Languages"] as SelectList;
-         CreateEditBookViewModel model = viewResult.Model as CreateEditBookViewModel;
+         IActionResult result = controller.Edit(validId);
+         dynamic model = new DynamicWrapper(result);
 
          //assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.AreEqual(editedBook.AuthorsOfBooks.Select(a => a.AuthorId).AsEnumerable(), model.SelectedAuthors);
+         Assert.IsInstanceOf<JsonResult>(result);
+         Assert.AreEqual(editedBook.LanguageId, model.SelectedLanguageId);
+         Assert.AreEqual(editedBook.CategoryId, model.SelectedCategoryId);
+         Assert.AreEqual(editedBook.AuthorsOfBooks.Select(a => a.AuthorId).AsEnumerable(), model.SelectedAuthorsId);
+         Assert.AreEqual(editedBook.BookTags.Select(a => a.TagId).AsEnumerable(), model.SelectedTagsId);
          Assert.AreEqual(_authors.Count(), model.Authors.Count());
-         Assert.AreEqual(editedBook.BookTags.Select(a => a.TagId).AsEnumerable(), model.SelectedTags);
          Assert.AreEqual(_tags.Count(), model.Tags.Count());
-         Assert.IsInstanceOf<SelectList>(viewResult.ViewData["Categories"]);
-         Assert.IsInstanceOf<SelectList>(viewResult.ViewData["Languages"]);
-         Assert.IsTrue(categories.Count() == mockRepo.Categories.Count());
-         Assert.IsTrue(languages.Count() == mockRepo.Languages.Count());
+         Assert.AreEqual(_categories.Count(), model.Categories.Count());
+         Assert.AreEqual(_languages.Count(), model.Languages.Count());
       }
 
       [Test]
-      public void Edit_POST_InvalidBookId_ReturnsHttpBadRequest()
+      public void Edit_PUT_InvalidModel_ReturnsJsonResultWithErrors()
+      {
+         //arrange
+         IRepository mockRepo = Substitute.For<IRepository>();
+         Book[] books = CreateBooks();
+         mockRepo.Books.Returns(books);
+
+         //act
+         BooksController controller = new BooksController(mockRepo);
+         CreateEditBookViewModel model = new CreateEditBookViewModel();
+         IActionResult result = controller.Edit(model).Result;
+
+         //assert
+         Assert.IsInstanceOf<JsonResult>(result);
+         dynamic json = new DynamicWrapper(result);
+         string errors = json.errors;
+         Assert.IsTrue(errors.Contains("Неверный идентификатор"));
+         Assert.IsTrue(errors.Contains("Не указано название книги"));
+         Assert.IsTrue(errors.Contains("Количество страниц должно быть в диапазоне от 1 до 5000"));
+         Assert.IsTrue(errors.Contains("Не указано описание книги"));
+         Assert.IsTrue(errors.Contains("Год должен быть в диапазоне от 1980 до 2050"));
+         Assert.IsTrue(errors.Contains("Не выбрана обложка книги"));
+         Assert.IsTrue(errors.Contains("Не указан язык"));
+         Assert.IsTrue(errors.Contains("Не указана категория"));
+         Assert.IsTrue(errors.Contains("Не указано авторство книги"));
+      }
+
+      [Test]
+      public void Edit_PUT_ValidModelInvalidBookId_ReturnsHttpBadRequest()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -380,16 +354,15 @@ namespace My_Progress_UnitTests
 
          //act
          BooksController controller = new BooksController(mockRepo);
-         CreateEditBookViewModel model = new CreateEditBookViewModel();
-         ActionResult result = controller.Edit(model, null);
+         CreateEditBookViewModel model = new CreateEditBookViewModel { BookId = invalidId };
+         IActionResult result = controller.Edit(model).Result;
 
          //assert
-         Assert.IsInstanceOf<StatusCodeResult>(result);
-         Assert.IsTrue((result as StatusCodeResult).StatusCode == 400);
+         Assert.IsInstanceOf<BadRequestResult>(result);
       }
 
       [Test]
-      public void Edit_POST_ValidModel_ReturnsCorrectModel()
+      public void Edit_PUT_ValidModelValidId_ReturnsOkObjectResult()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -401,13 +374,13 @@ namespace My_Progress_UnitTests
          //act
          BooksController controller = new BooksController(mockRepo);
          CreateEditBookViewModel model = CreateCreateEditBookViewModel(editedBook, mockRepo);
-         ActionResult result = controller.Edit(model, null);
-         RedirectToActionResult result2 = result as RedirectToActionResult;
+         IActionResult result = controller.Edit(model).Result;
 
          //assert
-         Assert.IsInstanceOf<RedirectToActionResult>(result);
-         Assert.IsTrue(result2.ActionName == "Details");
-         Assert.IsTrue(result2.RouteValues["id"].Equals(validId));
+         Assert.IsInstanceOf<OkObjectResult>(result);
+         dynamic json = new DynamicWrapper(result);
+         Assert.AreEqual(true, json.success);
+         Assert.AreEqual(1, json.BookId);
       }
 
       private CreateEditBookViewModel CreateCreateEditBookViewModel(Book book, IRepository repository)
@@ -426,22 +399,18 @@ namespace My_Progress_UnitTests
          model.Pages = book.Pages;
          model.Description = book.Description;
          model.Year = book.Year;
-         model.ImageData = book.ImageData;
-         model.ImageMimeType = book.ImageMimeType;
-         model.LanguageId = book.LanguageId;
-         model.CategoryId = book.CategoryId;
-         model.SelectedAuthors = book.AuthorsOfBooks.Select(a => a.AuthorId).ToList();
-         model.Authors = repository.Authors.OrderBy(x => x.LastName).Select(x => new SelectListItem { Value = x.AuthorId.ToString(), Text = x.LastName + " " + x.FirstName }).ToList();
-
-         model.SelectedTags = book.BookTags.Select(a => a.TagId).ToList();
-         model.Tags = repository.Tags.OrderBy(x => x.NameForLabels).Select(x => new SelectListItem { Value = x.TagId.ToString(), Text = x.NameForLabels }).ToList();
+         model.Base64ImageSrc = String.Format("data:{0};base64,{1}", book.ImageMimeType, Convert.ToBase64String(book.ImageData));
+         model.SelectedLanguageId = book.LanguageId;
+         model.SelectedCategoryId = book.CategoryId;
+         model.SelectedAuthorsId = book.AuthorsOfBooks.Select(a => a.AuthorId).ToList();
+         model.SelectedTagsId = book.BookTags.Select(a => a.TagId).ToList();
          return model;
       }
 
       #endregion
       #region Create
       [Test]
-      public void Create_GET_ReturnsCorrectView()
+      public void Create_GET_ReturnsCorrectOrderInJsonResult()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -452,24 +421,23 @@ namespace My_Progress_UnitTests
 
          //act
          BooksController controller = new BooksController(mockRepo);
-         ActionResult result = controller.Create();
-         ViewResult viewResult = result as ViewResult;
-         SelectList categories = viewResult.ViewData["Categories"] as SelectList;
-         SelectList languages = viewResult.ViewData["Languages"] as SelectList;
-         CreateEditBookViewModel model = (result as ViewResult).Model as CreateEditBookViewModel;
+         IActionResult result = controller.Create();
 
          //assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.IsInstanceOf<SelectList>(viewResult.ViewData["Categories"]);
-         Assert.IsInstanceOf<SelectList>(viewResult.ViewData["Languages"]);
-         Assert.IsTrue(categories.Count() == mockRepo.Categories.Count());
-         Assert.IsTrue(languages.Count() == mockRepo.Languages.Count());
-         Assert.AreEqual(_authors.Count(), model.Authors.Count());
-         Assert.AreEqual(_tags.Count(), model.Tags.Count());
+         Assert.IsInstanceOf<JsonResult>(result);
+         dynamic json = new DynamicWrapper(result);
+         Assert.AreEqual(_authors.Count(), json.Authors.Count);
+         Assert.AreEqual(_tags.Count(), json.Tags.Count);
+         Assert.AreEqual(_categories.Count(), json.Categories.Count);
+         Assert.AreEqual(_languages.Count(), json.Languages.Count);
+         Assert.AreEqual(1, json.Languages[0].LanguageId);
+         Assert.AreEqual(1, json.Tags[0].TagId);
+         Assert.AreEqual(1, json.Categories[0].CategoryId);
+         Assert.AreEqual(1, json.Authors[0].AuthorId);
       }
 
       [Test]
-      public void Create_POST_ValidModel_AddAndRedirectCorrectly()
+      public void Create_POST_ValidModel_ReturnsOkObjectResult()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -478,24 +446,23 @@ namespace My_Progress_UnitTests
          mockRepo.Books.Returns(books);
          int counter = 0;
          mockRepo.When(b => b.AddBook(Arg.Any<Book>())).Do(Callback.First(b => books.Add(newBook)).AndAlways(x => counter++));
-         //mockRepo.Setup(m => m.AddBook(It.IsAny<Book>())).Callback(() => books.Add(newBook));
          mockRepo.Authors.Returns(_authors);
          mockRepo.Tags.Returns(_tags);
 
          //act
          BooksController controller = new BooksController(mockRepo);
          CreateEditBookViewModel model = CreateCreateEditBookViewModel(newBook, mockRepo);
-         ActionResult result = controller.Create(model, null);
-         RedirectToActionResult result2 = result as RedirectToActionResult;
+         IActionResult result = controller.Create(model).Result;
 
          //assert
-         Assert.IsInstanceOf<RedirectToActionResult>(result);
+         mockRepo.Received(1).SaveChangesAsync();
+         Assert.IsInstanceOf<OkObjectResult>(result);
          Assert.AreEqual(newBook.Name, books.Last().Name);
-         Assert.IsTrue(result2.ActionName == "Details");
          Assert.IsTrue(counter == 1);
       }
+
       [Test]
-      public void Create_POST_InvalidModel_ReturnCorrectView()
+      public void Create_POST_InvalidMimeType_ReturnJsonResultWithErrors()
       {
          //arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -507,22 +474,42 @@ namespace My_Progress_UnitTests
 
          //act
          BooksController controller = new BooksController(mockRepo);
-         controller.ModelState.AddModelError("error", "model error");
          CreateEditBookViewModel model = CreateCreateEditBookViewModel(newBook, mockRepo);
-         ActionResult result = controller.Create(model, null);
-         ViewResult viewResult = result as ViewResult;
-         SelectList categories = viewResult.ViewData["CategoryId"] as SelectList;
-         SelectList languages = viewResult.ViewData["LanguageId"] as SelectList;
+         model.Base64ImageSrc = null;
+         IActionResult result = controller.Create(model).Result;
 
          //assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.AreEqual(model, viewResult.Model);
-         Assert.IsTrue(categories.Count() == mockRepo.Categories.Count());
-         Assert.IsTrue(languages.Count() == mockRepo.Languages.Count());
-         Assert.AreEqual(_authors.Count(), model.Authors.Count());
-         Assert.AreEqual(_tags.Count(), model.Tags.Count());
+         Assert.IsInstanceOf<JsonResult>(result);
+         dynamic json = new DynamicWrapper(result);
+         string errors = json.errors;
+         Assert.IsTrue(errors.Contains("Изображение имеет неверный формат"));
       }
 
+      [Test]
+      public void Create_POST_InvalidModel_ReturnJsonResultWithErrors()
+      {
+         //arrange
+         IRepository mockRepo = Substitute.For<IRepository>();
+         Book newBook = new Book();
+         //act
+         BooksController controller = new BooksController(mockRepo);
+         CreateEditBookViewModel model = new CreateEditBookViewModel();
+         IActionResult result = controller.Create(model).Result;
+
+         //assert
+         Assert.IsInstanceOf<JsonResult>(result);
+         dynamic json = new DynamicWrapper(result);
+         string errors = json.errors;
+         Assert.IsTrue(errors.Contains("Неверный идентификатор"));
+         Assert.IsTrue(errors.Contains("Не указано название книги"));
+         Assert.IsTrue(errors.Contains("Количество страниц должно быть в диапазоне от 1 до 5000"));
+         Assert.IsTrue(errors.Contains("Не указано описание книги"));
+         Assert.IsTrue(errors.Contains("Год должен быть в диапазоне от 1980 до 2050"));
+         Assert.IsTrue(errors.Contains("Не выбрана обложка книги"));
+         Assert.IsTrue(errors.Contains("Не указан язык"));
+         Assert.IsTrue(errors.Contains("Не указана категория"));
+         Assert.IsTrue(errors.Contains("Не указано авторство книги"));
+      }
       #endregion
       #region List
 
@@ -539,66 +526,25 @@ namespace My_Progress_UnitTests
          mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
          int booksPerPage = 4;
+
          //Act
-         ActionResult result = target.List();
-         BooksListViewModel model = ((ViewResult)result).Model as BooksListViewModel;
+         IActionResult result = target.List().Result;
+         BookListViewModel model = (result as JsonResult).Value as BookListViewModel;
 
          //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.AreEqual(booksPerPage, model.Books.Count());
+         Assert.IsInstanceOf<JsonResult>(result);
+         Assert.AreEqual(booksPerPage, model.RightPanelData.BookInfo.Count());
+         Assert.AreEqual(5, model.RightPanelData.BookInfo.First().BookId); // correct order
+         Assert.AreEqual(2, model.RightPanelData.TotalPages);
+
+         Assert.AreEqual(_authors.Count(), model.LeftPanelData.Authors.Count());
+         Assert.AreEqual(_tags.Count(), model.LeftPanelData.Tags.Count());
+         Assert.AreEqual(_languages.Count(), model.LeftPanelData.Languages.Count());
+         Assert.AreEqual(_categories.Count(), model.LeftPanelData.Categories.Count());
       }
 
       [Test]
-      public void List_DefaultParametersWhenNotAjaxRequest_ReturnsCorrectOrderOfBooks()
-      {
-         //Arrange
-         IRepository mockRepo = Substitute.For<IRepository>();
-         Book[] books = CreateBooks();
-         mockRepo.Books.Returns(books);
-         BooksController target = new BooksController(mockRepo);
-         IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
-         NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
-         target.BooksRequestManager = mockRequestManager;
-         //Act
-         ActionResult result = target.List();
-         BooksListViewModel model = ((ViewResult)result).Model as BooksListViewModel;
-         Book[] booksResult = model.Books.ToArray();
-         //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.AreSame(books[4], booksResult[0]);
-         Assert.AreSame(books[3], booksResult[1]);
-         Assert.AreSame(books[2], booksResult[2]);
-         Assert.AreSame(books[1], booksResult[3]);
-      }
-      [Test]
-      public void List_DefaultParametersWhenAjaxRequest_ReturnsCorrectOrderOfBooks()
-      {
-         //Arrange
-         IRepository mockRepo = Substitute.For<IRepository>();
-         Book[] books = CreateBooks();
-         mockRepo.Books.Returns(books);
-         BooksController target = new BooksController(mockRepo);
-         IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
-         NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
-         mockRequestManager.IsAjaxRequest(Arg.Any<BooksController>()).Returns(true);
-         target.BooksRequestManager = mockRequestManager;
-         //Act
-         ActionResult result = target.List();
-         BooksListViewModel model = ((ViewComponentResult)result).Arguments as BooksListViewModel;
-         Book[] booksResult = model.Books.ToArray();
-         //Assert
-         Assert.IsInstanceOf<ViewComponentResult>(result);
-         Assert.AreSame(books[4], booksResult[0]);
-         Assert.AreSame(books[3], booksResult[1]);
-         Assert.AreSame(books[2], booksResult[2]);
-         Assert.AreSame(books[1], booksResult[3]);
-      }
-
-
-      [Test]
-      public void List_InvalidCategory_ReturnsNotFoundView()
+      public void List_InvalidCategory_ReturnsNotFound()
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -609,11 +555,10 @@ namespace My_Progress_UnitTests
          int page = 1;
 
          //Act
-         ActionResult result = target.List(page, invalidCategory);
+         IActionResult result = target.List(page, invalidCategory).Result;
 
          //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.AreEqual("_NotFoundView", (result as ViewResult).ViewName);
+         Assert.IsInstanceOf<NotFoundResult>(result);
       }
 
       [TestCase("cat1", 1, 4)]
@@ -632,12 +577,13 @@ namespace My_Progress_UnitTests
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.List(page, category);
-         BooksListViewModel model = ((ViewResult)result).Model as BooksListViewModel;
-         Book[] booksResult = model.Books.ToArray();
+         IActionResult result = target.List(page, category).Result;
+
+         BookListViewModel model = ((JsonResult)result).Value as BookListViewModel;
+         BookShortInfo[] booksResult = model.RightPanelData.BookInfo.ToArray();
 
          //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
       }
 
@@ -660,12 +606,12 @@ namespace My_Progress_UnitTests
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.List(page, category);
-         BooksListViewModel model = ((ViewResult)result).Model as BooksListViewModel;
-         Book[] booksResult = model.Books.ToArray();
+         IActionResult result = target.List(page, category).Result;
+         BookListViewModel model = ((JsonResult)result).Value as BookListViewModel;
+         BookShortInfo[] booksResult = model.RightPanelData.BookInfo.ToArray();
 
          //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
       }
 
@@ -686,8 +632,8 @@ namespace My_Progress_UnitTests
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         BooksListViewModel result = ((ViewResult)target.List(page, category)).Model as BooksListViewModel;
-         Book[] booksResult = result.Books.ToArray();
+         BookListViewModel model = ((JsonResult)target.List(page, category).Result).Value as BookListViewModel;
+         BookShortInfo[] booksResult = model.RightPanelData.BookInfo.ToArray();
 
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
@@ -713,8 +659,8 @@ namespace My_Progress_UnitTests
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         BooksListViewModel result = ((ViewResult)target.List(page, category)).Model as BooksListViewModel;
-         Book[] booksResult = result.Books.ToArray();
+         BookListViewModel model = ((JsonResult)target.List(page, category).Result).Value as BookListViewModel;
+         BookShortInfo[] booksResult = model.RightPanelData.BookInfo.ToArray();
 
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
@@ -728,16 +674,15 @@ namespace My_Progress_UnitTests
          mockRepo.Categories.Returns(_categories);
          BooksController target = new BooksController(mockRepo);
 
-         IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
+         //IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          string invalidTag = "invalidTag";
          int page = 1;
 
          //Act
-         ActionResult result = target.List(page, invalidTag);
+         IActionResult result = target.List(page, invalidTag).Result;
 
          //Assert
-         Assert.IsInstanceOf<ViewResult>(result);
-         Assert.AreEqual("_NotFoundView", (result as ViewResult).ViewName);
+         Assert.IsInstanceOf<NotFoundResult>(result);
       }
 
       [TestCase("tag1", 1, 3)]
@@ -757,10 +702,10 @@ namespace My_Progress_UnitTests
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.List(page, null, tag);
-         BooksListViewModel model = ((ViewResult)result).Model as BooksListViewModel;
-         Book[] booksResult = model.Books.ToArray();
-
+         IActionResult result = target.List(page, null, tag).Result;
+         BookListViewModel model = ((JsonResult)result).Value as BookListViewModel;
+         BookShortInfo[] booksResult = model.RightPanelData.BookInfo.ToArray();
+         
          //Assert
          Assert.IsInstanceOf<ViewResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
@@ -785,9 +730,9 @@ namespace My_Progress_UnitTests
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.List(page, null, tag);
-         BooksListViewModel model = ((ViewResult)result).Model as BooksListViewModel;
-         Book[] booksResult = model.Books.ToArray();
+         IActionResult result = target.List(page, null, tag).Result;
+         BookListViewModel model = ((JsonResult)result).Value as BookListViewModel;
+         BookShortInfo[] booksResult = model.RightPanelData.BookInfo.ToArray();
 
          //Assert
          Assert.IsInstanceOf<ViewResult>(result);
@@ -811,8 +756,8 @@ namespace My_Progress_UnitTests
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         BooksListViewModel result = ((ViewResult)target.List(page, null, tag)).Model as BooksListViewModel;
-         Book[] booksResult = result.Books.ToArray();
+         BookListViewModel result = ((JsonResult)target.List(page, null, tag).Result).Value as BookListViewModel;
+         BookShortInfo[] booksResult = result.RightPanelData.BookInfo.ToArray();
 
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
@@ -838,8 +783,8 @@ namespace My_Progress_UnitTests
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         BooksListViewModel result = ((ViewResult)target.List(page, null, tag)).Model as BooksListViewModel;
-         Book[] booksResult = result.Books.ToArray();
+         BookListViewModel result = ((JsonResult)target.List(page, null, tag).Result).Value as BookListViewModel;
+         BookShortInfo[] booksResult = result.RightPanelData.BookInfo.ToArray();
 
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
@@ -850,7 +795,7 @@ namespace My_Progress_UnitTests
       #region ListToAppend
 
       [Test]
-      public void ListToAppend_DefaultParameters_ReturnsCorrectCountOfBooks()
+      public void ListAppend_DefaultParameters_ReturnsCorrectCountOfBooks()
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -859,20 +804,20 @@ namespace My_Progress_UnitTests
          BooksController target = new BooksController(mockRepo);
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
          int page = 2;
          //Act
-         ActionResult result = target.ListToAppend(page);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
+         IActionResult result = target.ListAppend(page).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
 
          //Assert
-         Assert.IsInstanceOf<ViewComponentResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(1, model.Count());
       }
 
       [Test]
-      public void ListToAppend_DefaultParameters_ReturnsCorrectOrderOfBooks()
+      public void ListAppend_DefaultParameters_ReturnsCorrectOrderOfBooks()
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -881,13 +826,13 @@ namespace My_Progress_UnitTests
          BooksController target = new BooksController(mockRepo);
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
          int page = 1;
          //Act
-         ActionResult result = target.ListToAppend(page);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
          //Assert
          Assert.IsInstanceOf<ViewComponentResult>(result);
          Assert.AreSame(books[4], booksResult[0]);
@@ -897,26 +842,24 @@ namespace My_Progress_UnitTests
       }
 
       [Test]
-      public void ListToAppend_InValidCategory_ReturnsEmptyResult()
+      public void ListAppend_InValidCategory_ReturnsEmptyResult()
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
          mockRepo.Categories.Returns(_categories);
          BooksController target = new BooksController(mockRepo);
-
-         IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          string invalidCategory = "invalidCategory";
          int page = 1;
 
          //Act
-         ActionResult result = target.ListToAppend(page, invalidCategory);
+         IActionResult result = target.ListAppend(page, invalidCategory).Result;
 
          //Assert
          Assert.IsInstanceOf<EmptyResult>(result);
       }
 
       [Test]
-      public void ListToAppend_WhenNoBooksInResult_ReturnsEmptyResult()
+      public void ListAppend_WhenNoBooksInResult_ReturnsEmptyResult()
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -925,18 +868,18 @@ namespace My_Progress_UnitTests
          BooksController target = new BooksController(mockRepo);
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
          int page = 3;
          //Act
-         ActionResult result = target.ListToAppend(page);
+         IActionResult result = target.ListAppend(page).Result;
 
          //Assert
          Assert.IsInstanceOf<EmptyResult>(result);
       }
 
       [TestCase("cat1", 1, 4)]
-      public void ListToAppend_ValidCategoryNoFilter_ReturnsCorrectCountOfBooksOnParticularPage(string category, int page, int expectedCount)
+      public void ListAppend_ValidCategoryNoFilter_ReturnsCorrectCountOfBooksOnParticularPage(string category, int page, int expectedCount)
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -947,21 +890,21 @@ namespace My_Progress_UnitTests
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.ListToAppend(page, category);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page, category).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
-         Assert.IsInstanceOf<ViewComponentResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
       }
 
       [TestCase("cat1", "lang", "en", 1, 2)]
-      public void ListToAppend_ValidCategoryWithFilter_ReturnsCorrectCountOfBooksOnParticularPage(string category, string queryKey, string queryValue, int page, int expectedCount)
+      public void ListAppend_ValidCategoryWithFilter_ReturnsCorrectCountOfBooksOnParticularPage(string category, string queryKey, string queryValue, int page, int expectedCount)
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -974,13 +917,13 @@ namespace My_Progress_UnitTests
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(queryCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(queryCollection);
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.ListToAppend(page, category);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page, category).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
          Assert.IsInstanceOf<ViewComponentResult>(result);
@@ -989,7 +932,7 @@ namespace My_Progress_UnitTests
 
       [TestCase("cat1", 1, 4, 0)]
       [TestCase("cat1", 1, 3, 1)]
-      public void ListToAppend_ValidCategoryNoFilter_ReturnsCorrectOrderOfBooks(string category, int page, int bookId, int bookIndex)
+      public void ListAppend_ValidCategoryNoFilter_ReturnsCorrectOrderOfBooks(string category, int page, int bookId, int bookIndex)
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -1000,13 +943,13 @@ namespace My_Progress_UnitTests
          BooksController target = new BooksController(mockRepo);
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.ListToAppend(page, category);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page, category).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
@@ -1014,7 +957,7 @@ namespace My_Progress_UnitTests
 
       [TestCase("cat1", "lang", "en", 1, 1, 1)]
       [TestCase("cat1", "lang", "en", 1, 2, 0)]
-      public void ListToAppend_ValidCategoryWithFilter_ReturnsCorrectOrderOfBooks(string category, string queryKey, string queryValue, int page, int bookId, int bookIndex)
+      public void ListAppend_ValidCategoryWithFilter_ReturnsCorrectOrderOfBooks(string category, string queryKey, string queryValue, int page, int bookId, int bookIndex)
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -1028,20 +971,20 @@ namespace My_Progress_UnitTests
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.ListToAppend(page, category);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page, category).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
       }
 
       [Test]
-      public void ListToAppend_InValidTag_ReturnsEmptyResult()
+      public void ListAppend_InValidTag_ReturnsEmptyResult()
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -1053,7 +996,7 @@ namespace My_Progress_UnitTests
          int page = 1;
 
          //Act
-         ActionResult result = target.ListToAppend(page, invalidTag);
+         IActionResult result = target.ListAppend(page, invalidTag).Result;
 
          //Assert
          Assert.IsInstanceOf<EmptyResult>(result);
@@ -1071,21 +1014,21 @@ namespace My_Progress_UnitTests
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.ListToAppend(page, null, tag);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page, null, tag).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
-         Assert.IsInstanceOf<ViewComponentResult>(result);
+         Assert.IsInstanceOf<JsonResult>(result);
          Assert.AreEqual(expectedCount, booksResult.Count());
       }
 
       [TestCase("tag1", "lang", "en", 1, 2)]
-      public void ListToAppend_ValidTagWithFilter_ReturnsCorrectCountOfBooksOnParticularPage(string tag, string queryKey, string queryValue, int page, int expectedCount)
+      public void ListAppend_ValidTagWithFilter_ReturnsCorrectCountOfBooksOnParticularPage(string tag, string queryKey, string queryValue, int page, int expectedCount)
       {
          //Arrange
          IRepository mockRepo = Substitute.For<IRepository>();
@@ -1098,13 +1041,13 @@ namespace My_Progress_UnitTests
          BooksController target = new BooksController(mockRepo);
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(queryCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(queryCollection);
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.ListToAppend(page, null, tag);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page, null, tag).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
          Assert.IsInstanceOf<ViewComponentResult>(result);
@@ -1124,13 +1067,13 @@ namespace My_Progress_UnitTests
          BooksController target = new BooksController(mockRepo);
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.ListToAppend(page, null, tag);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page, null, tag).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
@@ -1152,13 +1095,13 @@ namespace My_Progress_UnitTests
 
          IBooksRequestManager mockRequestManager = Substitute.For<IBooksRequestManager>();
          NameValueCollection emptyCollection = new System.Collections.Specialized.NameValueCollection();
-         mockRequestManager.GetQueryStringWhenAppend(Arg.Any<BooksController>()).Returns(emptyCollection);
+         mockRequestManager.GetQueryString(Arg.Any<BooksController>()).Returns(emptyCollection);
          target.BooksRequestManager = mockRequestManager;
 
          //Act
-         ActionResult result = target.ListToAppend(page, null, tag);
-         IEnumerable<Book> model = ((ViewComponentResult)result).Arguments as IEnumerable<Book>;
-         Book[] booksResult = model.ToArray();
+         IActionResult result = target.ListAppend(page, null, tag).Result;
+         IEnumerable<BookShortInfo> model = ((JsonResult)result).Value as IEnumerable<BookShortInfo>;
+         BookShortInfo[] booksResult = model.ToArray();
 
          //Assert
          Assert.AreEqual(bookId, booksResult[bookIndex].BookId);
@@ -1166,6 +1109,5 @@ namespace My_Progress_UnitTests
 
 
       #endregion
-
    }
 }

@@ -1,13 +1,19 @@
 ﻿import { GET_DATA_START, GET_DATA_SUCCESS, GET_DATA_ERROR, GET_NEXT_BOOK_INFO_SUCCESS, MIN_PAGE_CHANGED, MAX_PAGE_CHANGED, LANGUAGE_CHECKED_CHANGED, AUTHOR_CHECKED_CHANGED, RESET_FILTER } from "./actionTypes";
 
-export function getData(category, page, search = null) {
+export function getData(category, page, search = null, onNotFound) {
    return async (dispatch) => {
       dispatch({ type: GET_DATA_START });
       try {
          const url = `/api/books/list/${category || "all"}/page${page || 1}` + (search ? search : "");
          const response = await fetch(url);
          const data = await response.json();
-         dispatch(getDataSuccess(data, category, page));
+         if (data.status === 404) {
+            dispatch(getDataError());
+            onNotFound();
+         }
+         else {
+            dispatch(getDataSuccess(data, category, page));
+         }
       }
       catch (e) {
          dispatch(getDataError());

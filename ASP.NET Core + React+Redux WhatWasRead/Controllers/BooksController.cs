@@ -80,7 +80,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
 
       [HttpGet("list")]
       [HttpGet("list/{category}/page{page}")]
-      async public Task<BookListViewModel> List(int page = 1, string category = "all", string tag = null)
+      async public Task<IActionResult> List(int page = 1, string category = "all", string tag = null)
       {
          string defaultCategory = "all";
          if (category == null)
@@ -94,7 +94,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             currentCategory = _repository.Categories.Where(cat => cat.NameForLinks == category).FirstOrDefault();
             if (currentCategory == null) //category does not exist
             {
-               return null;
+               return NotFound();
             }
          }
          if (tag != null)
@@ -102,7 +102,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             currentTag = _repository.Tags.Where(x => x.NameForLinks == tag).FirstOrDefault();
             if (currentTag == null) //tag does not exist
             {
-               return null;
+               return NotFound();
             }
          }
 
@@ -116,47 +116,6 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
                await _repository.UpdateBooksFromFilterUsingRawSql(query, "books", "list");
             }
          }
-
-         RightPanelViewModel rightPanelModel = new RightPanelViewModel();
-         LeftPanelViewModel leftPanelModel = new LeftPanelViewModel();
-         BookListViewModel model = new BookListViewModel { LeftPanelData = leftPanelModel, RightPanelData = rightPanelModel };
-         leftPanelModel.Categories = _repository.Categories.OrderBy(c => c.NameForLabels).ToList();
-         leftPanelModel.Tags = _repository.Tags.OrderBy(t => t.NameForLabels).ToList();
-         leftPanelModel.MinPagesExpected = _repository.Books.Count() > 0 ? _repository.Books.Select(b => b.Pages).Min() : 0;
-         leftPanelModel.MaxPagesExpected = _repository.Books.Count() > 0 ? _repository.Books.Select(b => b.Pages).Max() : 0;
-         leftPanelModel.MinPagesActual = leftPanelModel.MinPagesExpected;
-         leftPanelModel.MaxPagesActual = leftPanelModel.MaxPagesExpected;
-         if (query != null)
-         {
-            string pages = query["pages"];
-            if (pages != null)
-            {
-               string[] ar = pages.Split('-');
-               if (Int32.TryParse(ar[0], out int min))
-               {
-                  leftPanelModel.MinPagesActual = min;
-               }
-               if (Int32.TryParse(ar[1], out int max))
-               {
-                  leftPanelModel.MaxPagesActual = max;
-               }
-            }
-         }
-         leftPanelModel.Authors = _repository.Authors.Select(a => new AuthorViewModel
-         {
-            AuthorId = a.AuthorId,
-            DisplayText = a.DisplayText,
-            Link = Helper.CreateFilterPartOfLink(this.Request.Path, query, LeftPanelViewModel.AuthorQueryWord, a.AuthorId.ToString(), out bool check),
-            Checked = check
-         }).OrderBy(a => a.DisplayText).ToList();
-         leftPanelModel.Languages = _repository.Languages.Select(l => new LanguageViewModel
-         {
-            LanguageId = l.LanguageId,
-            NameForLabels = l.NameForLabels,
-            NameForLinks = l.NameForLinks,
-            Link = Helper.CreateFilterPartOfLink(this.Request.Path, query, LeftPanelViewModel.LanguageQueryWord, l.NameForLinks, out bool check),
-            Checked = check
-         }).OrderBy(l => l.NameForLabels).ToList();
 
          IEnumerable<Book> books = null;
          if (currentCategory == null) //all categories
@@ -178,21 +137,61 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
                 .Where(b => b.CategoryId == currentCategory.CategoryId)
                 .OrderByDescending(b => b.BookId);
          }
+         RightPanelViewModel rightPanelModel = new RightPanelViewModel();
+         LeftPanelViewModel leftPanelModel = new LeftPanelViewModel();
+         BookListViewModel model = new BookListViewModel { LeftPanelData = leftPanelModel, RightPanelData = rightPanelModel };
+         if (query != null)
+         {
+            string pages = query["pages"];
+            if (pages != null)
+            {
+               string[] ar = pages.Split('-');
+               if (Int32.TryParse(ar[0], out int min))
+               {
+                  leftPanelModel.MinPagesActual = min;
+               }
+               if (Int32.TryParse(ar[1], out int max))
+               {
+                  leftPanelModel.MaxPagesActual = max;
+               }
+            }
+         }
+
+         leftPanelModel.Categories = _repository.Categories.OrderBy(c => c.NameForLabels).ToList();
+         leftPanelModel.Tags = _repository.Tags.OrderBy(t => t.NameForLabels).ToList();
+         leftPanelModel.MinPagesExpected = _repository.Books.Count() > 0 ? _repository.Books.Select(b => b.Pages).Min() : 0;
+         leftPanelModel.MaxPagesExpected = _repository.Books.Count() > 0 ? _repository.Books.Select(b => b.Pages).Max() : 0;
+         leftPanelModel.MinPagesActual = leftPanelModel.MinPagesExpected;
+         leftPanelModel.MaxPagesActual = leftPanelModel.MaxPagesExpected;
+
+         leftPanelModel.Authors = _repository.Authors.Select(a => new AuthorViewModel
+         {
+            AuthorId = a.AuthorId,
+            DisplayText = a.DisplayText,
+            Link = Helper.CreateFilterPartOfLink(this.Request.Path, query, LeftPanelViewModel.AuthorQueryWord, a.AuthorId.ToString(), out bool check),
+            Checked = check
+         }).OrderBy(a => a.DisplayText).ToList();
+         leftPanelModel.Languages = _repository.Languages.Select(l => new LanguageViewModel
+         {
+            LanguageId = l.LanguageId,
+            NameForLabels = l.NameForLabels,
+            NameForLinks = l.NameForLinks,
+            Link = Helper.CreateFilterPartOfLink(this.Request.Path, query, LeftPanelViewModel.LanguageQueryWord, l.NameForLinks, out bool check),
+            Checked = check
+         }).OrderBy(l => l.NameForLabels).ToList();
 
          rightPanelModel.TotalPages = (int)Math.Ceiling((decimal)books.Count() / Globals.ITEMS_PER_PAGE);
          books = books.Skip((page - 1) * Globals.ITEMS_PER_PAGE).Take(Globals.ITEMS_PER_PAGE);
 
-         if (books == null || books.Count() == 0)
+         if (books != null && books.Count() != 0)
          {
-            return model;
+            rightPanelModel.BookInfo = books.Select(b => new BookShortInfo { BookId = b.BookId, Name = b.Name, Authors = b.DisplayAuthors() }).ToList();
          }
-         rightPanelModel.BookInfo = books.Select(b => new BookShortInfo { BookId = b.BookId, Name = b.Name, Authors = b.DisplayAuthors() }).ToList();
-
-         return model;
+         return new JsonResult(model);
       }
 
       [HttpGet("listAppend")]
-      async public Task<IEnumerable<BookShortInfo>> ListAppend(int page = 1, string category = "all", string tag = null)
+      async public Task<IActionResult> ListAppend(int page = 1, string category = "all", string tag = null)
       {
          string defaultCategory = "all";
          if (category == null)
@@ -206,7 +205,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             currentCategory = _repository.Categories.Where(cat => cat.NameForLinks == category).FirstOrDefault();
             if (currentCategory == null) //category does not exist
             {
-               return null;
+               return new EmptyResult();
             }
          }
          if (tag != null)
@@ -214,7 +213,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             currentTag = _repository.Tags.Where(x => x.NameForLinks == tag).FirstOrDefault();
             if (currentTag == null) //tag does not exist
             {
-               return null;
+               return new EmptyResult();
             }
          }
 
@@ -252,10 +251,10 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
 
          if (books == null || books.Count() == 0)
          {
-            return null;
+            return new EmptyResult();
          }
          IEnumerable<BookShortInfo> rightPanelModel = books.Select(b => new BookShortInfo { BookId = b.BookId, Name = b.Name, Authors = b.DisplayAuthors() }).ToList();
-         return rightPanelModel;
+         return  new JsonResult(rightPanelModel);
       }
 
       [HttpGet("details/{id}")]
@@ -264,7 +263,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
          Book book = _repository.FindBook(id);
          if (book == null)
          {
-            return null;
+            return NotFound();
          }
          var model = new
          {
@@ -288,9 +287,9 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
          var model = new
          {
             Authors = _repository.Authors.OrderBy(a => a.DisplayText).ToList(),
-            Tags = _repository.Tags.Select(t=>new {t.TagId,t.NameForLabels }).OrderBy(t => t.NameForLabels).ToList(),
-            Categories = _repository.Categories.Select(c=>new {c.CategoryId,c.NameForLabels }).OrderBy(c => c.NameForLabels).ToList(),
-            Languages = _repository.Languages.Select(l=>new {l.LanguageId, l.NameForLabels }).OrderBy(l => l.NameForLabels).ToList()
+            Tags = _repository.Tags.Select(t => new { t.TagId, t.NameForLabels }).OrderBy(t => t.NameForLabels).ToList(),
+            Categories = _repository.Categories.Select(c => new { c.CategoryId, c.NameForLabels }).OrderBy(c => c.NameForLabels).ToList(),
+            Languages = _repository.Languages.Select(l => new { l.LanguageId, l.NameForLabels }).OrderBy(l => l.NameForLabels).ToList()
          };
          return new JsonResult(model);
       }
@@ -360,7 +359,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
          Book book = _repository.FindBook(id);
          if (book == null)
          {
-            return null;
+            return NotFound();
          }
          var model = new
          {
@@ -375,7 +374,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             SelectedAuthorsId = book.AuthorsOfBooks.Select(ab => ab.Author).Select(a => a.AuthorId).ToList(),
             SelectedTagsId = book.BookTags.Select(a => a.TagId).ToList(),
 
-            Authors = _repository.Authors.Select(a =>new { AuthorId = a.AuthorId, DisplayText = a.DisplayText }).OrderBy(b => b.DisplayText).ToList(),
+            Authors = _repository.Authors.Select(a => new { AuthorId = a.AuthorId, DisplayText = a.DisplayText }).OrderBy(b => b.DisplayText).ToList(),
             Tags = _repository.Tags.Select(t => new { TagId = t.TagId, NameForLabels = t.NameForLabels }).OrderBy(t => t.NameForLabels).ToList(),
             Categories = _repository.Categories.Select(c => new { CategoryId = c.CategoryId, NameForLabels = c.NameForLabels }).OrderBy(c => c.NameForLabels).ToList(),
             Languages = _repository.Languages.Select(l => new { LanguageId = l.LanguageId, NameForLabels = l.NameForLabels }).OrderBy(l => l.NameForLabels).ToList()
@@ -449,14 +448,18 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             }
             else
             {
-               return new JsonResult(new { errors = "Возникла ошибка." });
+               return new JsonResult(new { errors = "Данные были оновлены." });
             }
+         }
+         catch (Exception)
+         {
+            return new JsonResult(new { errors = "Возникла ошибка." });
          }
          return Ok(new { success = true, statuscode = "200" });
       }
 
       [HttpDelete("delete/{id}")]
-      public async Task<ActionResult> Delete(int id)
+      public async Task<IActionResult> Delete(int id)
       {
          Book book = _repository.FindBook(id);
          if (book == null)

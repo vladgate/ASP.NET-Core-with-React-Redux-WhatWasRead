@@ -75,8 +75,8 @@ class LeftPanel extends React.Component {
          <li key={0} data-target="all">
             <NavLink to={`/`} activeClassName="selected" isActive={() => this.props.location.pathname === "/" || this.props.match.params.category === "all"}>Все</NavLink>
          </li>);
-      if (this.props.data.categories) {
-         result.push(this.props.data.categories.map((item) => {
+      if (this.props.categories) {
+         result.push(this.props.categories.map((item) => {
             return (<li key={item.categoryId} data-target={item.nameForLinks}>
                <NavLink to={`/books/list/${item.nameForLinks}/page1`} activeClassName="selected" isActive={() => this.props.match.params.category === item.nameForLinks}>{item.nameForLabels}</NavLink>
             </li>)
@@ -86,10 +86,10 @@ class LeftPanel extends React.Component {
    }
 
    renderLanguages() {
-      if (!this.props.data.languages) {
+      if (!this.props.languages) {
          return null;
       }
-      return this.props.data.languages.map((item) => {
+      return this.props.languages.map((item) => {
          return (
             <li key={item.languageId} >
                <input className="filter-checkbox" type="checkbox" id={item.languageId} checked={item.checked} onChange={(event) => this.onLanguageCheckedChange(event)} />
@@ -99,10 +99,10 @@ class LeftPanel extends React.Component {
    }
 
    renderAuthors() {
-      if (!this.props.data.authors) {
+      if (!this.props.authors) {
          return null;
       }
-      return this.props.data.authors.map((item) => {
+      return this.props.authors.map((item) => {
          return (
             <li key={item.authorId} className="filter-li">
                <input className="filter-checkbox" type="checkbox" id={item.authorId} checked={item.checked} onChange={(event) => this.onAuthorCheckedChange(event)} />
@@ -112,10 +112,10 @@ class LeftPanel extends React.Component {
    }
 
    renderTags() {
-      if (!this.props.data.tags) {
+      if (!this.props.tags) {
          return null;
       }
-      return this.props.data.tags.map((item) => {
+      return this.props.tags.map((item) => {
          return (
             <span key={item.tagId} className="tag-span" data-target={item.nameForLinks}>
                <Link to={`/books/list/all/page1?tag=${item.nameForLinks}`}>{item.nameForLabels}</Link>
@@ -141,11 +141,11 @@ class LeftPanel extends React.Component {
             <ul className="filter-ul" data-target={AUTHOR_QUERY_WORD}>
                {this.renderAuthors()}
             </ul>
-            <div id="filter-pages" data-target={PAGES_QUERY_WORD} data-min={this.props.data.minPageExpected} data-max={this.props.data.maxPageExpected}>
+            <div id="filter-pages" data-target={PAGES_QUERY_WORD} data-min={this.props.minPageExpected} data-max={this.props.maxPageExpected}>
                <span className="filter-span">Количество страниц:</span>
                <p>
-                  <span> от: </span><input className="filter-page-count" id="min-pages" type="text" value={this.props.data.minPagesActual || this.props.data.minPagesExpected || 0} onChange={(event) => this.onMinPagesChange(event)} />
-                  <span> до: </span><input className="filter-page-count" id="max-pages" type="text" value={this.props.data.maxPagesActual || this.props.data.maxPagesExpected || 0} onChange={(event) => this.onMaxPagesChange(event)} />
+                  <span> от: </span><input className="filter-page-count" id="min-pages" type="text" value={this.props.minPagesActual || this.props.minPagesExpected || 0} onChange={(event) => this.onMinPagesChange(event)} />
+                  <span> до: </span><input className="filter-page-count" id="max-pages" type="text" value={this.props.maxPagesActual || this.props.maxPagesExpected || 0} onChange={(event) => this.onMaxPagesChange(event)} />
                </p>
             </div>
             <div className="btn-placeholder">
@@ -170,6 +170,8 @@ function mapStateToProps(state) {
       page: state.currentPage,
       languages: state.leftPanelData.languages,
       authors: state.leftPanelData.authors,
+      categories: state.leftPanelData.categories,
+      tags: state.leftPanelData.tags,
       minPagesExpected: state.leftPanelData.minPagesExpected,
       maxPagesExpected: state.leftPanelData.maxPagesExpected,
       minPagesActual: state.leftPanelData.minPagesActual,
