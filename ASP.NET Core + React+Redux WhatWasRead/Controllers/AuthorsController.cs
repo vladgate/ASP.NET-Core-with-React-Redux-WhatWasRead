@@ -72,14 +72,18 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
             }
             else
             {
-               return new JsonResult(new { errors = "Возникла ошибка." });
+               return new JsonResult(new { errors = "Данные были оновлены." });
             }
+         }
+         catch (Exception)
+         {
+            return new JsonResult(new { errors = "Возникла ошибка." });
          }
          return Ok(new { success = true, statuscode = "200" });
       }
 
       [HttpPost]
-      public async Task<ActionResult> PostAuthor(CreateEditAuthorViewModel model)
+      public async Task<IActionResult> PostAuthor(CreateEditAuthorViewModel model)
       {
          string errors = model.Validate(isCreate: true);
          if (errors != "")
@@ -101,7 +105,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
 
       // DELETE: api/Authors/5
       [HttpDelete("{id}")]
-      public async Task<ActionResult> DeleteAuthor(int id)
+      public async Task<IActionResult> DeleteAuthor(int id)
       {
          var author = _repository.Authors.Where(a => a.AuthorId == id).FirstOrDefault();
          if (author == null)

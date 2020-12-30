@@ -18,7 +18,7 @@ class MainPage extends React.Component {
    }
 
    ensureGetData() {
-      this.props.getData(this.props.match.params.category, parseInt(this.props.match.params.page), this.props.location.search);
+      this.props.getData(this.props.match.params.category, parseInt(this.props.match.params.page), this.props.location.search, () => this.props.history.push('/'));
    }
 
    render() {
@@ -38,7 +38,7 @@ function mapStateToProps(state) {
 }
 function mapDispatchToProps(dispatch) {
    return {
-      getData: (category, page, search) => dispatch(getData(category, page, search))
+      getData: (category, page, search, onNotFound) => dispatch(getData(category, page, search, onNotFound))
    };
 }
 
