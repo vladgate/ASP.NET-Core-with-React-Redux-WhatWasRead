@@ -78,7 +78,6 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Controllers
          }
       }
 
-      [HttpGet("list")]
       [HttpGet("list/{category}/page{page}")]
       async public Task<IActionResult> List(int page = 1, string category = "all", string tag = null)
       {

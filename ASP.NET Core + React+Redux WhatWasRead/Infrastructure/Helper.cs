@@ -10,6 +10,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -24,6 +25,7 @@ namespace ASP.NET_Core_React_Redux_WhatWasRead.Infrastructure
          {
             currentPath = currentPath.Remove(0, 4);
          }
+         currentPath = Regex.Replace(currentPath, @"\/page\d+", "/page1"); //link always redirect to first page
          if (currentQueryString == null) // no query parameters
          {
             return currentPath + "?" + queryWord + "=" + value;

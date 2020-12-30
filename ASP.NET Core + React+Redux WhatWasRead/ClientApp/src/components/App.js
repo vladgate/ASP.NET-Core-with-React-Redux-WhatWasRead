@@ -18,7 +18,7 @@ class App extends React.Component {
                <Route exact path="/books/create" render={() => <BookEditOrCreate isCreate={true} />}/>
                <Route exact path="/authors" component={AuthorList} />
                <Route exact path="/tags" component={TagList} />
-               <Route exact path={["/books/list/:category/page:page", "/books/list", "/"]} component={MainPage} />
+               <Route exact path={["/books/list/:category/page:page", "/"]} component={MainPage} />
                <Redirect to="/" />
             </Switch>
          </Layout>

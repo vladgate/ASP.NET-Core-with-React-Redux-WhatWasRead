@@ -72,7 +72,7 @@ export function maxPageChanged(newValue) {
 
 export function changeLanguageChecked(langId) {
    return (dispatch, getState) => {
-      const state = getState();
+      const state = getState().main;
       const languages = state.leftPanelData.languages || [];
       for (let i = 0; i < languages.length; i++) {
          if (languages[i].languageId === langId) {
@@ -89,7 +89,7 @@ export function changeLanguageChecked(langId) {
 
 export function changeAuthorChecked(authorId) {
    return (dispatch, getState) => {
-      const state = getState();
+      const state = getState().main;
       const authors = state.leftPanelData.authors || [];
       for (let i = 0; i < authors.length; i++) {
          if (authors[i].authorId === authorId) {
